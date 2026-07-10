@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0.2 — Lint, Format, Type Gates</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --ink:#e8e9ec; --muted:#9aa1ad;
+    --line:#2a2f3a; --accent:#e8a33d; --accent2:#6cc17a; --bad:#e06c75; --code:#0b0d11;
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f6f6f4; --panel:#fff; --panel2:#f0f1ee; --ink:#1c1e24; --muted:#5c636f;
+      --line:#e2e3df; --accent:#c9821f; --accent2:#3f9e57; --code:#f2f3ef; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:820px;margin:0 auto;padding:48px 22px 96px;}
+  .kicker{color:var(--accent);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12.5px}
+  h1{font-size:34px;line-height:1.15;margin:.35em 0 .1em;letter-spacing:-.02em}
+  h2{font-size:23px;margin:2.1em 0 .5em;letter-spacing:-.01em;border-bottom:1px solid var(--line);padding-bottom:.35em}
+  h3{font-size:17px;margin:1.5em 0 .3em}
+  p{color:var(--ink)} .muted{color:var(--muted)}
+  .lead{font-size:18px;color:var(--muted)}
+  a{color:var(--accent)}
+  code{background:var(--code);padding:.12em .4em;border-radius:6px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
+  pre{background:var(--code);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;overflow-x:auto}
+  pre code{background:none;padding:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:18px 0}
+  .why{border-left:3px solid var(--accent)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:620px){.grid{grid-template-columns:1fr}}
+  .tool{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .tool b{color:var(--accent)}
+  .tag{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+    border-radius:999px;padding:2px 10px;font-size:12px;margin:2px 4px 2px 0}
+  .tree{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:13.5px;line-height:1.7;color:var(--muted)}
+  .tree b{color:var(--ink)}
+  /* quiz */
+  .quiz{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:16px 0}
+  .q{font-weight:600;margin-bottom:10px}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin:7px 0;cursor:pointer;
+    font:inherit;transition:.12s}
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{border-color:var(--accent2);background:color-mix(in srgb,var(--accent2) 16%,var(--panel2))}
+  .opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--panel2))}
+  .fb{margin-top:10px;font-size:14.5px;color:var(--muted);display:none}
+  .fb.show{display:block}
+  .checklist{list-style:none;padding:0}
+  .checklist li{padding:8px 0 8px 30px;position:relative;border-bottom:1px solid var(--line)}
+  .checklist li:before{content:"▢";position:absolute;left:4px;color:var(--accent);font-size:15px}
+  .pill{font-size:12px;color:var(--bg);background:var(--accent);border-radius:999px;padding:2px 10px;font-weight:700}
+  footer{margin-top:40px;color:var(--muted);font-size:14px}
+  .ref{border-left:3px solid var(--accent2);background:var(--panel);border-radius:0 12px 12px 0}
+  .dom{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2);font-weight:700}
+  .warn{border-left:3px solid var(--bad)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">AntWorks-RL · Phase 0 · Lesson 0.2</div>
+  <h1>Lint, Format, Type Gates</h1>
+  <p class="lead">0.1 gave you an installable, reproducible package. 0.2 makes it <i>self-enforcing</i>: a linter/formatter and a type checker wired into both your editor and pre-commit, so drift gets caught at save-time and commit-time — before it ever reaches a review or a training run.</p>
+
+  <div class="card why">
+    <b>Why this lesson now?</b> Every lesson from here on adds real code — sim mechanics, then MAPPO internals with tensor shapes that are easy to get subtly wrong. A type checker catches a transposed obs/action shape before you burn a GPU-hour discovering it at runtime. A lint/format gate keeps a solo, lesson-by-lesson codebase from accreting inconsistency across 40+ future sessions. Cheap insurance, bought once.
+  </div>
+
+  <h2>1 · ruff — one tool, two jobs</h2>
+  <p><b>ruff</b> is a single Rust binary that does both linting (<code>ruff check</code>) and formatting (<code>ruff format</code>) — replacing the old flake8 + isort + black stack from your <code>src</code>-layout lesson's intro. It's fast enough to run on every save with no perceptible lag.</p>
+  <div class="grid">
+    <div class="tool"><b>ruff check</b><br><span class="muted">Static analysis: unused imports, undefined names, import order, hundreds of opt-in rule sets (pyflakes, pycodestyle, pyupgrade, bugbear, …).</span></div>
+    <div class="tool"><b>ruff format</b><br><span class="muted">Opinionated code formatter, black-compatible output. No config bikeshedding — that's the point.</span></div>
+  </div>
+  <pre><code># configure once, in pyproject.toml
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]   # pyflakes, pycodestyle, isort, pyupgrade, bugbear
+
+# run it
+uv run ruff check .        # lint
+uv run ruff format .       # format
+uv run ruff check --fix .  # auto-fix what's safely fixable</code></pre>
+
+  <h2>2 · ty — type checking, with a caveat</h2>
+  <p><b>ty</b> is Astral's new type checker (same team as uv/ruff), written in Rust for speed, but it is explicitly <b>beta</b> as of 2025 — expect false positives/negatives and a smaller rule surface than mature checkers. That's why the locked design treats it as <i>non-blocking</i> in CI for now, with <b>mypy</b> as the documented fallback if ty's gaps get in the way on real code (e.g. once PyTorch tensor typing gets involved in Phase 4).</p>
+  <pre><code>uv run ty check .          # or: uvx ty check .</code></pre>
+  <div class="card warn">
+    <b>Practical stance:</b> run <code>ty</code> locally and treat its output as signal, not law, while it's beta. Don't spend time fighting it to satisfy an edge case — note the gap and move on. This is a deliberate, documented trade-off, not carelessness.
+  </div>
+
+  <h2>3 · Pre-commit: the gate that can't be skipped by forgetting</h2>
+  <p>A lint rule you have to remember to run is a lint rule you'll eventually forget to run. <a href="https://pre-commit.com/"><b>pre-commit</b></a> installs a git hook that runs your checks automatically on every <code>git commit</code>, blocking the commit if they fail.</p>
+  <pre><code># .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.x.x          # pin an actual released tag
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format</code></pre>
+  <pre><code>uv add --dev pre-commit
+uv run pre-commit install       # writes .git/hooks/pre-commit
+uv run pre-commit run --all-files   # dry-run against the whole repo once</code></pre>
+  <p class="muted">Note: <code>ty</code> is intentionally <i>not</i> in the pre-commit gate yet (per the beta caveat above) — keep it as a manual/CI-informational check for now, wired into your editor for immediate feedback instead.</p>
+
+  <h2>4 · Editor integration</h2>
+  <p>The fastest feedback loop is the one that never leaves your editor. If you're on VS Code: install the official <b>Ruff</b> extension (lint + format-on-save) and, if available for your editor, Astral's <b>ty</b> language-server extension for inline type diagnostics. Point your editor's Python interpreter at <code>.venv</code> (uv creates it) so import resolution matches what <code>uv run</code> actually sees.</p>
+
+  <h2>5 · Check yourself</h2>
+  <p class="muted">Immediate feedback — click an answer.</p>
+
+  <div class="quiz" data-correct="b">
+    <div class="q">Q1. Why is <code>ty</code> excluded from the blocking pre-commit gate but <code>ruff</code> isn't?</div>
+    <button class="opt" data-k="a">a) ty is slower than ruff.</button>
+    <button class="opt" data-k="b">b) ty is still beta — false positives/negatives would block valid commits, so it stays informational until it matures.</button>
+    <button class="opt" data-k="c">c) ty can't be run from the command line.</button>
+    <div class="fb" data-k="a">Not the reason — ty is actually built for speed, same lineage as ruff/uv.</div>
+    <div class="fb" data-k="b">Right. This is a documented, deliberate trade-off in this project's locked design, not an oversight.</div>
+    <div class="fb" data-k="c">It has a full CLI (<code>ty check</code>); that's not the issue.</div>
+  </div>
+
+  <div class="quiz" data-correct="c">
+    <div class="q">Q2. What does a pre-commit hook actually buy you over "just run ruff before pushing"?</div>
+    <button class="opt" data-k="a">a) It makes ruff run faster.</button>
+    <button class="opt" data-k="b">b) It replaces the need for a formatter.</button>
+    <button class="opt" data-k="c">c) It removes reliance on memory/discipline — the check runs automatically and blocks the commit on failure.</button>
+    <div class="fb" data-k="a">Speed is the same either way; this is about enforcement, not performance.</div>
+    <div class="fb" data-k="b">No — ruff format still does the formatting; pre-commit just guarantees it's invoked.</div>
+    <div class="fb" data-k="c">Exactly — automation beats habit, especially across many future lesson sessions.</div>
+  </div>
+
+  <div class="quiz" data-correct="a">
+    <div class="q">Q3. You add a new dependency, run <code>ruff check --fix .</code>, and it silently reorders your imports. What rule set is responsible?</div>
+    <button class="opt" data-k="a">a) I — the isort-equivalent import-sorting rules.</button>
+    <button class="opt" data-k="b">b) UP — the pyupgrade rules.</button>
+    <button class="opt" data-k="c">c) B — the bugbear rules.</button>
+    <div class="fb" data-k="a">Correct — <code>I</code> is ruff's built-in isort implementation.</div>
+    <div class="fb" data-k="b">UP modernizes syntax (e.g. old-style type hints), not import order.</div>
+    <div class="fb" data-k="c">bugbear flags likely-bug patterns, not import ordering.</div>
+  </div>
+
+  <h2>6 · Your exercise <span class="pill">you code this</span></h2>
+  <p>Wire the gates into the repo you already have. End-state:</p>
+  <ul class="checklist">
+    <li><code>[tool.ruff]</code> + <code>[tool.ruff.lint]</code> sections added to <code>pyproject.toml</code> with an explicit <code>select</code> list (at least pyflakes/pycodestyle/isort).</li>
+    <li><code>uv run ruff check .</code> and <code>uv run ruff format --check .</code> both pass clean on the current repo.</li>
+    <li><code>uv run ty check .</code> runs (output reviewed — doesn't need to be zero-issue given the beta caveat, but you should be able to explain any remaining findings).</li>
+    <li><code>pre-commit</code> added as a dev dependency, a <code>.pre-commit-config.yaml</code> with at least the ruff-check + ruff-format hooks, and <code>pre-commit install</code> run so the git hook exists.</li>
+    <li>Prove the gate works: make a trivial lint violation (e.g. an unused import), attempt <code>git commit</code>, and confirm it's blocked — then fix it and commit successfully.</li>
+    <li>Editor wired for at least format-on-save (screenshot/description is fine if I can't see your editor directly).</li>
+  </ul>
+  <div class="card why">
+    <b>Then come back to the chat.</b> Tell me you're done, or paste your <code>pyproject.toml</code> ruff config + <code>.pre-commit-config.yaml</code>. I'll check them against the criteria above before we move to 0.3 (the Hydra + Pydantic config spine).
+  </div>
+
+  <h2>7 · Deep-dive references</h2>
+  <div class="card ref"><span class="dom">Python tooling</span><br><a href="https://docs.astral.sh/ruff/">Ruff documentation</a><br><span class="muted">Start with "Configuration" and "Rules" — skim the rule-set table to see what <code>select</code> codes map to.</span></div>
+  <div class="card ref"><span class="dom">Python tooling</span><br><a href="https://docs.astral.sh/ty/">ty documentation (Astral)</a><br><span class="muted">Note the "Beta" framing in the docs directly — this is the source for the maturity caveat above.</span></div>
+  <div class="card ref"><span class="dom">Engineering practice</span><br><a href="https://pre-commit.com/">pre-commit framework docs</a><br><span class="muted">The hook-management tool used across most modern Python repos; not Astral-specific.</span></div>
+  <div class="card ref"><span class="dom">Type checking (fallback)</span><br><a href="https://mypy.readthedocs.io/">mypy documentation</a><br><span class="muted">Keep this bookmarked — the locked design names mypy as the fallback if ty's beta gaps bite on real PyTorch code later.</span></div>
+
+  <footer>
+    AntWorks-RL · Lesson 0.2 · saved to <code>learning/explainers/</code> — reopen anytime.<br>
+    Terminology follows <code>learning/GLOSSARY.md</code>. Next: <b>0.3 — Config spine (Hydra + Pydantic)</b>.
+  </footer>
+</div>
+
+<script>
+  document.querySelectorAll('.quiz').forEach(function(quiz){
+    var correct = quiz.getAttribute('data-correct');
+    quiz.querySelectorAll('.opt').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var k = btn.getAttribute('data-k');
+        quiz.querySelectorAll('.opt').forEach(function(b){ b.classList.remove('correct','wrong'); });
+        quiz.querySelectorAll('.fb').forEach(function(f){ f.classList.remove('show'); });
+        btn.classList.add(k===correct ? 'correct' : 'wrong');
+        if(k!==correct){ quiz.querySelector('.opt[data-k="'+correct+'"]').classList.add('correct'); }
+        var fb = quiz.querySelector('.fb[data-k="'+k+'"]'); if(fb) fb.classList.add('show');
+      });
+    });
+  });
+</script>
+</body>
+</html>

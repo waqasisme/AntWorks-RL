@@ -11,8 +11,8 @@ Legend: ⬜ not started · 🟦 in progress · ✅ done
 ## Phase 0 — Foundation (lean production-Python scaffold)
 *Goal: a modern, typed, tested, config-driven repo skeleton. Learn the Astral toolchain + project hygiene.*
 
-- 🟦 **0.1 — Modern Python scaffolding**: `uv` project, src-layout, `pyproject.toml`, dependency groups. *Deliverable: installable `antworks` package.*
-- ⬜ **0.2 — Lint/format/type gates**: `ruff` + `ty`, pre-commit hooks, editor integration.
+- ✅ **0.1 — Modern Python scaffolding**: `uv` project, src-layout, `pyproject.toml`, dependency groups. *Deliverable: installable `antworks_rl` package.*
+- 🟦 **0.2 — Lint/format/type gates**: `ruff` + `ty`, pre-commit hooks, editor integration.
 - ⬜ **0.3 — Config spine**: Hydra composition + Pydantic validation; a `Config` object loaded from YAML with a CLI override.
 - ⬜ **0.4 — Test + CI harness**: `pytest` layout, first `hypothesis` test, GitHub Actions running lint/type/test.
 - ⬜ **0.5 — Logging**: stdlib `logging` + `structlog` (JSON) + `rich` console, level driven by config.
