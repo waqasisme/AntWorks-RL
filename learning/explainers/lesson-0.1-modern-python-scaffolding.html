@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0.1 — Modern Python Scaffolding</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --ink:#e8e9ec; --muted:#9aa1ad;
+    --line:#2a2f3a; --accent:#e8a33d; --accent2:#6cc17a; --bad:#e06c75; --code:#0b0d11;
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f6f6f4; --panel:#fff; --panel2:#f0f1ee; --ink:#1c1e24; --muted:#5c636f;
+      --line:#e2e3df; --accent:#c9821f; --accent2:#3f9e57; --code:#f2f3ef; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:820px;margin:0 auto;padding:48px 22px 96px;}
+  .kicker{color:var(--accent);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12.5px}
+  h1{font-size:34px;line-height:1.15;margin:.35em 0 .1em;letter-spacing:-.02em}
+  h2{font-size:23px;margin:2.1em 0 .5em;letter-spacing:-.01em;border-bottom:1px solid var(--line);padding-bottom:.35em}
+  h3{font-size:17px;margin:1.5em 0 .3em}
+  p{color:var(--ink)} .muted{color:var(--muted)}
+  .lead{font-size:18px;color:var(--muted)}
+  a{color:var(--accent)}
+  code{background:var(--code);padding:.12em .4em;border-radius:6px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
+  pre{background:var(--code);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;overflow-x:auto}
+  pre code{background:none;padding:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:18px 0}
+  .why{border-left:3px solid var(--accent)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:620px){.grid{grid-template-columns:1fr}}
+  .tool{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .tool b{color:var(--accent)}
+  .tag{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+    border-radius:999px;padding:2px 10px;font-size:12px;margin:2px 4px 2px 0}
+  .tree{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:13.5px;line-height:1.7;color:var(--muted)}
+  .tree b{color:var(--ink)}
+  /* quiz */
+  .quiz{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:16px 0}
+  .q{font-weight:600;margin-bottom:10px}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin:7px 0;cursor:pointer;
+    font:inherit;transition:.12s}
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{border-color:var(--accent2);background:color-mix(in srgb,var(--accent2) 16%,var(--panel2))}
+  .opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--panel2))}
+  .fb{margin-top:10px;font-size:14.5px;color:var(--muted);display:none}
+  .fb.show{display:block}
+  .checklist{list-style:none;padding:0}
+  .checklist li{padding:8px 0 8px 30px;position:relative;border-bottom:1px solid var(--line)}
+  .checklist li:before{content:"▢";position:absolute;left:4px;color:var(--accent);font-size:15px}
+  .pill{font-size:12px;color:var(--bg);background:var(--accent);border-radius:999px;padding:2px 10px;font-weight:700}
+  footer{margin-top:40px;color:var(--muted);font-size:14px}
+  .ref{border-left:3px solid var(--accent2);background:var(--panel);border-radius:0 12px 12px 0}
+  .dom{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">AntWorks-RL · Phase 0 · Lesson 0.1</div>
+  <h1>Modern Python Scaffolding</h1>
+  <p class="lead">Before a single ant moves, we lay a foundation a hiring manager would nod at: a fast, reproducible, typed, <code>src</code>-layout package managed by <b>uv</b>. This is the "brush up on modern production-grade Python" part of your mission — done properly, once.</p>
+
+  <div class="card why">
+    <b>Why this lesson, first?</b> You already know Python. What's changed under you is the <i>tooling</i>. In 2020 a "real" project meant juggling <code>venv</code> + <code>pip</code> + <code>pip-tools</code> + <code>setup.py</code> + <code>flake8</code> + <code>black</code> + <code>isort</code> + <code>mypy</code> — six tools, three config files, and a lockfile you maintained by hand. The Astral toolchain collapses most of that. Getting the skeleton right now means every later lesson (sim, MAPPO, benchmarks) lands in a clean, testable home instead of a pile of scripts.
+  </div>
+
+  <h2>1 · The problem uv solves</h2>
+  <p>Historically, Python packaging spread one job across many tools with no shared lockfile, so "works on my machine" was the default failure mode. <b>uv</b> is a single Rust binary that replaces <code>pip</code>, <code>pip-tools</code>, <code>virtualenv</code>, and <code>pyenv</code> — and, crucially, it writes a <b>lockfile</b> (<code>uv.lock</code>) so your environment is <i>reproducible</i> down to the hash. Reproducibility isn't a nicety here: your RL results must be re-runnable, and that starts at the dependency layer.</p>
+
+  <div class="grid">
+    <div class="tool"><b>uv</b><br><span class="muted">project + dependency manager + Python installer. One binary.</span></div>
+    <div class="tool"><b>ruff</b><br><span class="muted">linter + formatter (replaces flake8/black/isort). Lesson 0.2.</span></div>
+    <div class="tool"><b>ty</b><br><span class="muted">type checker (your Astral bet). Lesson 0.2.</span></div>
+    <div class="tool"><b>pyproject.toml</b><br><span class="muted">one declarative file: metadata, deps, tool config.</span></div>
+  </div>
+
+  <h2>2 · Why <code>src</code>-layout (not flat)</h2>
+  <p>Two ways to lay out a package:</p>
+  <div class="grid">
+    <div>
+      <h3>❌ Flat layout</h3>
+      <div class="tree">
+        AntWorks-RL/<br>
+        ├─ <b>antworks/</b><br>
+        │  └─ env.py<br>
+        └─ pyproject.toml
+      </div>
+      <p class="muted" style="font-size:14px">Your tests can <code>import antworks</code> straight from the working directory — <i>even if the package isn't actually installed correctly.</i> Packaging bugs stay hidden until someone else installs it.</p>
+    </div>
+    <div>
+      <h3>✅ src layout <span class="pill">we use this</span></h3>
+      <div class="tree">
+        AntWorks-RL/<br>
+        ├─ <b>src/antworks/</b><br>
+        │  └─ env.py<br>
+        ├─ tests/<br>
+        └─ pyproject.toml
+      </div>
+      <p class="muted" style="font-size:14px">The package can only be imported once <i>installed</i> (via <code>uv pip install -e .</code>). Your tests exercise the <b>real installed package</b>, catching packaging mistakes immediately. This is the production-grade default.</p>
+    </div>
+  </div>
+
+  <h2>3 · Anatomy of <code>pyproject.toml</code></h2>
+  <p>One file, several tables. You'll grow this all course long; today just the spine:</p>
+<pre><code>[project]
+name = "antworks"
+version = "0.1.0"
+description = "Learned multi-agent ant-colony simulation"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.0",
+]
+
+[dependency-groups]        # dev-only deps, not shipped to users
+dev = ["pytest>=8", "hypothesis>=6"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/antworks"]</code></pre>
+  <div class="card">
+    <b>Note the split:</b> runtime <code>dependencies</code> (what a user of <code>antworks</code> needs) vs the <code>dev</code> <b>dependency group</b> (pytest, hypothesis — tools only <i>you</i> need). Keeping these apart is exactly the discipline that keeps a shipped package lean. uv installs dev groups by default locally, and skips them in a production install.
+  </div>
+
+  <h2>4 · The commands you'll run</h2>
+<pre><code># one-time: create the project skeleton (we'll adapt what it generates)
+uv init --package --python 3.12 .
+
+# add a runtime dependency (writes pyproject + uv.lock, installs into .venv)
+uv add numpy
+
+# add a dev-only dependency
+uv add --dev pytest hypothesis
+
+# run anything inside the managed environment
+uv run python -c "import antworks; print(antworks.__version__)"</code></pre>
+  <p class="muted"><code>uv</code> creates and manages <code>.venv</code> for you — you rarely activate it by hand; you prefix commands with <code>uv run</code>. The <code>uv.lock</code> file it writes is what makes your teammate's (and CI's) environment byte-for-byte yours.</p>
+
+  <h2>5 · Check yourself</h2>
+  <p class="muted">Immediate feedback — click an answer.</p>
+
+  <div class="quiz" data-correct="b">
+    <div class="q">Q1. Why does this project use a <code>src/</code> layout instead of a flat one?</div>
+    <button class="opt" data-k="a">a) It makes imports shorter in application code.</button>
+    <button class="opt" data-k="b">b) It forces tests to run against the <i>installed</i> package, exposing packaging bugs early.</button>
+    <button class="opt" data-k="c">c) uv only supports the src layout.</button>
+    <div class="fb" data-k="a">Not quite — imports are actually slightly longer to configure. The win is correctness, not brevity.</div>
+    <div class="fb" data-k="b">Exactly. Flat layout lets you import from the CWD even when the package isn't installed right; src layout removes that false safety net.</div>
+    <div class="fb" data-k="c">No — uv supports both. This is a deliberate <i>quality</i> choice, not a tooling constraint.</div>
+  </div>
+
+  <div class="quiz" data-correct="c">
+    <div class="q">Q2. Why put <code>pytest</code> and <code>hypothesis</code> in a <code>[dependency-groups] dev</code> table rather than in <code>dependencies</code>?</div>
+    <button class="opt" data-k="a">a) They install faster that way.</button>
+    <button class="opt" data-k="b">b) Because they're written in Rust.</button>
+    <button class="opt" data-k="c">c) They're needed to develop/test the package, but a user who installs <code>antworks</code> shouldn't be forced to pull them.</button>
+    <div class="fb" data-k="a">Install speed isn't the reason — it's about what ships to end users.</div>
+    <div class="fb" data-k="b">They aren't, and that wouldn't matter here anyway.</div>
+    <div class="fb" data-k="c">Right. Runtime deps travel with the package; dev deps stay on your machine and in CI.</div>
+  </div>
+
+  <div class="quiz" data-correct="a">
+    <div class="q">Q3. What role does <code>uv.lock</code> play for your RL experiments specifically?</div>
+    <button class="opt" data-k="a">a) It pins exact dependency versions/hashes so a training run is reproducible across machines and time.</button>
+    <button class="opt" data-k="b">b) It stores your trained model weights.</button>
+    <button class="opt" data-k="c">c) It's an optional cache you can delete safely.</button>
+    <div class="fb" data-k="a">Yes. Reproducibility is a first-class goal (we also seed everything from config) — and it begins with a locked dependency graph.</div>
+    <div class="fb" data-k="b">No — weights are model checkpoints; the lockfile is about the environment.</div>
+    <div class="fb" data-k="c">It's not junk — deleting it discards your reproducible resolution. Commit it.</div>
+  </div>
+
+  <h2>6 · Your exercise <span class="pill">you code this</span></h2>
+  <p>Now the skill. In the repo root, produce the Phase-0 skeleton. Aim for this end-state:</p>
+  <ul class="checklist">
+    <li><code>uv</code> is installed and <code>uv --version</code> works.</li>
+    <li>A <code>src/antworks/</code> package with an <code>__init__.py</code> exposing <code>__version__</code>.</li>
+    <li>A <code>pyproject.toml</code> with the <code>[project]</code> spine, <code>requires-python = ">=3.12"</code>, <code>numpy</code> as a runtime dep, and <code>pytest</code>+<code>hypothesis</code> in a <code>dev</code> group.</li>
+    <li>A committed <code>uv.lock</code>.</li>
+    <li><code>uv run python -c "import antworks; print(antworks.__version__)"</code> prints <code>0.1.0</code>.</li>
+    <li>A <code>.gitignore</code> that ignores <code>.venv/</code>, <code>__pycache__/</code>, <code>*.pyc</code>.</li>
+  </ul>
+  <div class="card why">
+    <b>Then come back to the chat.</b> Tell me you're done (or paste your <code>pyproject.toml</code>). I'll review it against production conventions before we move to Lesson 0.2 (ruff + ty gates). Don't let me hand you the answer first — the point is that <i>you</i> build it.
+  </div>
+
+  <h2>7 · Deep-dive references</h2>
+  <div class="card ref"><span class="dom">Python tooling</span><br><a href="https://docs.astral.sh/uv/">uv documentation — Projects & dependencies</a><br><span class="muted">Start with "Working on projects". Skim "Locking and syncing".</span></div>
+  <div class="card ref"><span class="dom">Python packaging</span><br><a href="https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/">Python Packaging Guide — src vs flat layout</a><br><span class="muted">The canonical rationale for the layout choice above.</span></div>
+  <div class="card ref"><span class="dom">Reproducibility</span><br><a href="https://spinningup.openai.com/en/latest/spinningup/spinningup.html">Spinning Up — "The right background"</a><br><span class="muted">Why experimental reproducibility matters in RL; motivates the lockfile + seeding discipline you'll meet again in Phase 4.</span></div>
+
+  <footer>
+    AntWorks-RL · Lesson 0.1 · saved to <code>learning/explainers/</code> — reopen anytime.<br>
+    Terminology follows <code>learning/GLOSSARY.md</code>. Next: <b>0.2 — Lint / format / type gates</b>.
+  </footer>
+</div>
+
+<script>
+  document.querySelectorAll('.quiz').forEach(function(quiz){
+    var correct = quiz.getAttribute('data-correct');
+    quiz.querySelectorAll('.opt').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var k = btn.getAttribute('data-k');
+        quiz.querySelectorAll('.opt').forEach(function(b){ b.classList.remove('correct','wrong'); });
+        quiz.querySelectorAll('.fb').forEach(function(f){ f.classList.remove('show'); });
+        btn.classList.add(k===correct ? 'correct' : 'wrong');
+        if(k!==correct){ quiz.querySelector('.opt[data-k="'+correct+'"]').classList.add('correct'); }
+        var fb = quiz.querySelector('.fb[data-k="'+k+'"]'); if(fb) fb.classList.add('show');
+      });
+    });
+  });
+</script>
+</body>
+</html>
