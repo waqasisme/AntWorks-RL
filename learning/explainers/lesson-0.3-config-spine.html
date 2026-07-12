@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0.3 — Config Spine (Hydra + Pydantic)</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --ink:#e8e9ec; --muted:#9aa1ad;
+    --line:#2a2f3a; --accent:#e8a33d; --accent2:#6cc17a; --bad:#e06c75; --code:#0b0d11;
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f6f6f4; --panel:#fff; --panel2:#f0f1ee; --ink:#1c1e24; --muted:#5c636f;
+      --line:#e2e3df; --accent:#c9821f; --accent2:#3f9e57; --code:#f2f3ef; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:820px;margin:0 auto;padding:48px 22px 96px;}
+  .kicker{color:var(--accent);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12.5px}
+  h1{font-size:34px;line-height:1.15;margin:.35em 0 .1em;letter-spacing:-.02em}
+  h2{font-size:23px;margin:2.1em 0 .5em;letter-spacing:-.01em;border-bottom:1px solid var(--line);padding-bottom:.35em}
+  h3{font-size:17px;margin:1.5em 0 .3em}
+  p{color:var(--ink)} .muted{color:var(--muted)}
+  .lead{font-size:18px;color:var(--muted)}
+  a{color:var(--accent)}
+  code{background:var(--code);padding:.12em .4em;border-radius:6px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
+  pre{background:var(--code);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;overflow-x:auto}
+  pre code{background:none;padding:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:18px 0}
+  .why{border-left:3px solid var(--accent)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:620px){.grid{grid-template-columns:1fr}}
+  .tool{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .tool b{color:var(--accent)}
+  .tag{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+    border-radius:999px;padding:2px 10px;font-size:12px;margin:2px 4px 2px 0}
+  .tree{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:13.5px;line-height:1.7;color:var(--muted)}
+  .tree b{color:var(--ink)}
+  /* quiz */
+  .quiz{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:16px 0}
+  .q{font-weight:600;margin-bottom:10px}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin:7px 0;cursor:pointer;
+    font:inherit;transition:.12s}
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{border-color:var(--accent2);background:color-mix(in srgb,var(--accent2) 16%,var(--panel2))}
+  .opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--panel2))}
+  .fb{margin-top:10px;font-size:14.5px;color:var(--muted);display:none}
+  .fb.show{display:block}
+  .checklist{list-style:none;padding:0}
+  .checklist li{padding:8px 0 8px 30px;position:relative;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;transition:color .15s}
+  .checklist li:before{content:"▢";position:absolute;left:4px;color:var(--accent);font-size:15px}
+  .checklist li:hover{color:var(--accent)}
+  .checklist li.checked:before{content:"▣";color:var(--accent2)}
+  .checklist li.checked{color:var(--muted)}
+  .pill{font-size:12px;color:var(--bg);background:var(--accent);border-radius:999px;padding:2px 10px;font-weight:700}
+  footer{margin-top:40px;color:var(--muted);font-size:14px}
+  .ref{border-left:3px solid var(--accent2);background:var(--panel);border-radius:0 12px 12px 0}
+  .dom{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2);font-weight:700}
+  .warn{border-left:3px solid var(--bad)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">AntWorks-RL · Phase 0 · Lesson 0.3</div>
+  <h1>Config Spine — Hydra + Pydantic</h1>
+  <p class="lead">0.1 gave you a package; 0.2 made it self-enforcing. 0.3 gives it a <i>spine</i>: every run — sim, training, sweep — is driven by one composable, typed config object instead of scattered constants or argparse flags.</p>
+
+  <div class="card why">
+    <b>Why this lesson now?</b> The locked design says every stochastic component draws from an injected, seeded RNG "whose seed comes from config" — that requires a config object to exist before Phase 1's grid and RNG do. Later, Phase 5 needs to sweep MAPPO-vs-IPPO and other hyperparameters without editing code, and Phase 4's MAPPO has dozens of knobs (clip ratio, GAE lambda, learning rates, network sizes). Hydra composition + multirun sweeps is exactly the tool for that; Pydantic is what stops a mistyped YAML key from silently becoming <code>None</code> three modules deep at 2am during a training run.
+  </div>
+
+  <h2>1 · Two tools, two different jobs</h2>
+  <div class="grid">
+    <div class="tool"><b>Hydra</b><br><span class="muted">Composes YAML fragments (config groups) into one tree, and lets you override any leaf from the CLI — <code>seed=7 sim.grid_size=64</code> — without touching a file. Also drives <code>--multirun</code> sweeps later.</span></div>
+    <div class="tool"><b>Pydantic</b><br><span class="muted">Takes the composed, still-dynamic tree (an <code>OmegaConf</code>/<code>DictConfig</code>) and validates it into a typed, immutable-by-convention Python object — wrong type, missing field, or unknown key becomes a loud <code>ValidationError</code> at startup, not a mystery three files later.</span></div>
+  </div>
+  <p>Hydra alone gives you a dict-like <code>DictConfig</code> — attribute access works, but nothing stops <code>cfg.seed = "banana"</code> from flowing straight into your RNG constructor. Pydantic is the seam where "YAML text" becomes "a value the type checker and your code can actually trust."</p>
+
+  <h2>2 · Config groups &amp; composition</h2>
+  <p>Hydra's unit of composition is a <b>config group</b>: a subdirectory of <code>conf/</code> holding interchangeable YAML variants, wired together by a <code>defaults</code> list in the top-level config.</p>
+  <pre><code>conf/
+  config.yaml          # top-level: defaults list + any ungrouped keys
+  logging/
+    default.yaml        # e.g. level: INFO
+    debug.yaml          # e.g. level: DEBUG
+</code></pre>
+  <pre><code># conf/config.yaml
+defaults:
+  - logging: default
+  - _self_
+
+seed: 0
+run_name: dev
+</code></pre>
+  <pre><code># entrypoint
+import hydra
+from omegaconf import DictConfig, OmegaConf
+
+@hydra.main(version_base=None, config_path="../conf", config_name="config")
+def main(cfg: DictConfig) -> None:
+    print(OmegaConf.to_yaml(cfg))
+</code></pre>
+  <p>Swap groups or override leaves from the CLI without editing YAML:</p>
+  <pre><code>uv run antworks-rl logging=debug seed=42</code></pre>
+
+  <h2>3 · Bridging to Pydantic</h2>
+  <p>The composed <code>DictConfig</code> is still dynamic. Convert it to a plain container and hand it to a Pydantic model — that's the validation boundary:</p>
+  <pre><code>from omegaconf import OmegaConf
+from pydantic import BaseModel
+
+class LoggingConfig(BaseModel):
+    level: str = "INFO"
+
+class Config(BaseModel):
+    seed: int
+    run_name: str
+    logging: LoggingConfig
+
+@hydra.main(version_base=None, config_path="../conf", config_name="config")
+def main(cfg: DictConfig) -> None:
+    config = Config.model_validate(OmegaConf.to_container(cfg, resolve=True))
+    ...</code></pre>
+  <p class="muted">Give every Pydantic model <code>model_config = ConfigDict(extra="forbid")</code> so a typo'd YAML key (<code>see</code> instead of <code>seed</code>) raises instead of silently vanishing.</p>
+
+  <h2>4 · Testing config with pytest</h2>
+  <p>Config is the first thing your entrypoint does — if it's wrong, nothing else runs. Test it early and loudly.</p>
+  <p>Use Hydra's <code>compose</code> API to load configs programmatically in tests (no CLI args needed):</p>
+  <pre><code>from hydra import initialize, compose
+from hydra.core.global_hydra import GlobalHydra
+import pytest
+
+def test_config_loads_and_validates():
+    GlobalHydra.instance().clear()  # reset Hydra state
+    with initialize(version_base=None, config_path="conf"):
+        cfg = compose(config_name="config")
+        config = Config(**OmegaConf.to_container(cfg, resolve=True))
+    assert config.seed > 0
+    assert isinstance(config.run_name, str)</code></pre>
+  <p>Also test that validation <em>fails</em> loudly on bad input:</p>
+  <pre><code>def test_config_rejects_bad_type():
+    GlobalHydra.instance().clear()
+    with initialize(version_base=None, config_path="conf"):
+        cfg = compose(config_name="config", overrides=["logging.level=123"])
+        with pytest.raises(ValidationError):
+            Config(**OmegaConf.to_container(cfg, resolve=True))</code></pre>
+  <p>This catches schema drift early: if someone adds a field to YAML and forgets to add it to <code>Config</code>, or vice versa, the test breaks before it ships.</p>
+
+  <h2>5 · Check yourself</h2>
+  <p class="muted">Immediate feedback — click an answer.</p>
+
+  <div class="quiz" data-correct="b">
+    <div class="q">Q1. What does Pydantic catch that Hydra/OmegaConf alone would not?</div>
+    <button class="opt" data-k="a">a) A missing YAML file on disk.</button>
+    <button class="opt" data-k="b">b) A field with the wrong type or an unrecognized/misspelled key, at the moment the config is loaded.</button>
+    <button class="opt" data-k="c">c) An invalid CLI override syntax like <code>seed==5</code>.</button>
+    <div class="fb" data-k="a">Hydra itself already errors on a missing config file/group before Pydantic ever runs.</div>
+    <div class="fb" data-k="b">Right — OmegaConf is happy to hand you `seed: "banana"` or an extra unknown key; Pydantic's validation (especially with `extra="forbid"`) is what turns that into a clear, immediate error.</div>
+    <div class="fb" data-k="c">That's a Hydra/OmegaConf CLI-parsing error, raised before your Pydantic model ever sees anything.</div>
+  </div>
+
+  <div class="quiz" data-correct="a">
+    <div class="q">Q2. Why put <code>seed</code> in config at all instead of a hardcoded constant, per this repo's conventions?</div>
+    <button class="opt" data-k="a">a) So every stochastic component can be driven by one injected, seeded RNG whose seed is reproducible and sweepable from the CLI.</button>
+    <button class="opt" data-k="b">b) Because Hydra requires at least one top-level integer field.</button>
+    <button class="opt" data-k="c">c) Because Pydantic models can't have zero fields.</button>
+    <div class="fb" data-k="a">Exactly — CLAUDE.md's "no global random/np.random" convention only works if the seed is a first-class config value you can override per run (`seed=1`, `seed=2`, ...) for reproducibility and later multirun sweeps.</div>
+    <div class="fb" data-k="b">No such requirement — this is purely a project convention, not a Hydra constraint.</div>
+    <div class="fb" data-k="c">Not a real constraint — this is about reproducibility, not Pydantic mechanics.</div>
+  </div>
+
+  <div class="quiz" data-correct="c">
+    <div class="q">Q3. You run <code>uv run antworks-rl logging=debug</code>. What is <code>logging=debug</code> doing?</div>
+    <button class="opt" data-k="a">a) Setting a Python `logging.Logger` level directly, bypassing config.</button>
+    <button class="opt" data-k="b">b) Passing a Python keyword argument to `main()`.</button>
+    <button class="opt" data-k="c">c) Telling Hydra to swap in `conf/logging/debug.yaml` in place of the `logging` group's default, before composition and Pydantic validation happen.</button>
+    <div class="fb" data-k="a">Nothing touches the stdlib `logging` module at this stage — this is purely config composition.</div>
+    <div class="fb" data-k="b">Hydra intercepts these as CLI overrides against the config tree, not as Python call arguments.</div>
+    <div class="fb" data-k="c">Right — this is a config-group override: Hydra picks `debug.yaml` from the `logging/` group instead of `default.yaml`, merges it into the tree, and only then does your code convert + validate it.</div>
+  </div>
+
+  <h2>6 · Your exercise <span class="pill">you code this</span></h2>
+  <p>Give the repo a real config spine. End-state:</p>
+  <ul class="checklist">
+    <li><code>conf/config.yaml</code> exists with a <code>defaults</code> list and at least one config group (e.g. <code>conf/logging/{default,debug}.yaml</code>) — mirroring the tree shown above.</li>
+    <li>A <code>Config</code> Pydantic model (and any nested sub-models, e.g. <code>LoggingConfig</code>) living in the package (e.g. <code>src/antworks_rl/config.py</code>) that mirrors the YAML schema, with <code>extra="forbid"</code> set.</li>
+    <li>The package entrypoint uses <code>@hydra.main</code> to compose the config, then converts + validates it into your <code>Config</code> model before doing anything else.</li>
+    <li>Demonstrate a CLI override actually changing behavior — e.g. <code>uv run antworks-rl seed=123</code> prints/logs a different seed than the default run.</li>
+    <li>Demonstrate the validation boundary failing loudly — pass an override that breaks a type or field name (e.g. <code>logging.level=123</code> or a misspelled key) and show the <code>ValidationError</code> it raises, rather than a silent bad value.</li>
+    <li>At least one <code>pytest</code> test that loads the default config via Hydra's <code>compose</code> API (or by invoking the entrypoint) and asserts it validates into your <code>Config</code> model successfully.</li>
+  </ul>
+  <div class="card why">
+    <b>Then come back to the chat.</b> Tell me you're done, or paste your <code>conf/</code> tree, <code>Config</code> model, and the entrypoint. I'll check them against the criteria above before we move to 0.4 (test + CI harness).
+  </div>
+
+  <h2>7 · Deep-dive references</h2>
+  <div class="card ref"><span class="dom">Python tooling</span><br><a href="https://hydra.cc/docs/intro/">Hydra documentation</a><br><span class="muted">Start with "Config Groups" and "Multi-run" — the latter previews why this spine pays off in Phase 5's MAPPO-vs-IPPO sweeps.</span></div>
+  <div class="card ref"><span class="dom">Python tooling</span><br><a href="https://docs.pydantic.dev/latest/concepts/models/">Pydantic documentation — Models</a><br><span class="muted">Look at <code>model_validate</code>, nested models, and the <code>extra="forbid"</code> setting under "Model Config".</span></div>
+  <div class="card ref"><span class="dom">Python tooling</span><br><a href="https://omegaconf.readthedocs.io/">OmegaConf documentation</a><br><span class="muted">Hydra's config engine underneath — read "To container" for the exact <code>OmegaConf.to_container(cfg, resolve=True)</code> bridge into Pydantic.</span></div>
+  <div class="card ref"><span class="dom">Engineering practice</span><br><a href="https://hydra.cc/docs/advanced/hydra-config/">Hydra + structured configs / dataclasses</a><br><span class="muted">Hydra also supports dataclass-based structured configs; worth knowing why this project chose the YAML+Pydantic combo instead (looser coupling to Hydra internals, richer runtime validation).</span></div>
+
+  <footer>
+    AntWorks-RL · Lesson 0.3 · saved to <code>learning/explainers/</code> — reopen anytime.<br>
+    Terminology follows <code>learning/GLOSSARY.md</code>. Next: <b>0.4 — Test + CI harness</b>.
+  </footer>
+</div>
+
+<script>
+  document.querySelectorAll('.quiz').forEach(function(quiz){
+    var correct = quiz.getAttribute('data-correct');
+    quiz.querySelectorAll('.opt').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var k = btn.getAttribute('data-k');
+        quiz.querySelectorAll('.opt').forEach(function(b){ b.classList.remove('correct','wrong'); });
+        quiz.querySelectorAll('.fb').forEach(function(f){ f.classList.remove('show'); });
+        btn.classList.add(k===correct ? 'correct' : 'wrong');
+        if(k!==correct){ quiz.querySelector('.opt[data-k="'+correct+'"]').classList.add('correct'); }
+        var fb = quiz.querySelector('.fb[data-k="'+k+'"]'); if(fb) fb.classList.add('show');
+      });
+    });
+  });
+  document.querySelectorAll('.checklist').forEach(function(list, li){
+    list.querySelectorAll('li').forEach(function(item, i){
+      var key = 'awrl-check:' + location.pathname + ':' + li + ':' + i;
+      if(localStorage.getItem(key) === '1'){ item.classList.add('checked'); }
+      item.addEventListener('click', function(){
+        item.classList.toggle('checked');
+        localStorage.setItem(key, item.classList.contains('checked') ? '1' : '0');
+      });
+    });
+  });
+</script>
+</body>
+</html>

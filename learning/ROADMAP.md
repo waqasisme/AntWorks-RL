@@ -12,9 +12,9 @@ Legend: ⬜ not started · 🟦 in progress · ✅ done
 *Goal: a modern, typed, tested, config-driven repo skeleton. Learn the Astral toolchain + project hygiene.*
 
 - ✅ **0.1 — Modern Python scaffolding**: `uv` project, src-layout, `pyproject.toml`, dependency groups. *Deliverable: installable `antworks_rl` package.*
-- 🟦 **0.2 — Lint/format/type gates**: `ruff` + `ty`, pre-commit hooks, editor integration.
-- ⬜ **0.3 — Config spine**: Hydra composition + Pydantic validation; a `Config` object loaded from YAML with a CLI override.
-- ⬜ **0.4 — Test + CI harness**: `pytest` layout, first `hypothesis` test, GitHub Actions running lint/type/test.
+- ✅ **0.2 — Lint/format/type gates**: `ruff` + `ty`, pre-commit hooks, editor integration.
+- ✅ **0.3 — Config spine**: Hydra composition + Pydantic validation; a `Config` object loaded from YAML with a CLI override.
+- 🟦 **0.4 — Test + CI harness**: `pytest` layout, first `hypothesis` test, GitHub Actions running lint/type/test.
 - ⬜ **0.5 — Logging**: stdlib `logging` + `structlog` (JSON) + `rich` console, level driven by config.
 - ⬜ **0.6 — Docs that lead the code**: *formalize* the seeded `CLAUDE.md` with the conventions established across 0.1–0.5, and write a lean, honestly-labelled `README.md` (vision + status banner + roadmap pointer). *CLAUDE.md seeded at repo root already; ARCHITECTURE.md intentionally deferred to end of Phase 1.*
 

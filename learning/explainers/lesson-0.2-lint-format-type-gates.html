@@ -50,8 +50,11 @@
   .fb{margin-top:10px;font-size:14.5px;color:var(--muted);display:none}
   .fb.show{display:block}
   .checklist{list-style:none;padding:0}
-  .checklist li{padding:8px 0 8px 30px;position:relative;border-bottom:1px solid var(--line)}
+  .checklist li{padding:8px 0 8px 30px;position:relative;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;transition:color .15s}
   .checklist li:before{content:"▢";position:absolute;left:4px;color:var(--accent);font-size:15px}
+  .checklist li:hover{color:var(--accent)}
+  .checklist li.checked:before{content:"▣";color:var(--accent2)}
+  .checklist li.checked{color:var(--muted)}
   .pill{font-size:12px;color:var(--bg);background:var(--accent);border-radius:999px;padding:2px 10px;font-weight:700}
   footer{margin-top:40px;color:var(--muted);font-size:14px}
   .ref{border-left:3px solid var(--accent2);background:var(--panel);border-radius:0 12px 12px 0}
@@ -184,6 +187,16 @@ uv run pre-commit run --all-files   # dry-run against the whole repo once</code>
         btn.classList.add(k===correct ? 'correct' : 'wrong');
         if(k!==correct){ quiz.querySelector('.opt[data-k="'+correct+'"]').classList.add('correct'); }
         var fb = quiz.querySelector('.fb[data-k="'+k+'"]'); if(fb) fb.classList.add('show');
+      });
+    });
+  });
+  document.querySelectorAll('.checklist').forEach(function(list, li){
+    list.querySelectorAll('li').forEach(function(item, i){
+      var key = 'awrl-check:' + location.pathname + ':' + li + ':' + i;
+      if(localStorage.getItem(key) === '1'){ item.classList.add('checked'); }
+      item.addEventListener('click', function(){
+        item.classList.toggle('checked');
+        localStorage.setItem(key, item.classList.contains('checked') ? '1' : '0');
       });
     });
   });

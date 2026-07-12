@@ -1,0 +1,3 @@
+# Hydra's relative `config_path` resolves as a module, not a filesystem path
+
+During 0.3 review, Claude incorrectly advised deleting `src/conf/__init__.py` as a stray file; removing it broke the CLI (`Primary config module 'conf' not found`). The user accepted the correction, restored it, and separately fixed `tests/test_config.py`'s `initialize(config_path=...)` to the correct relative path (`../src/conf`) from the test file's location — demonstrating understanding that Hydra's relative `config_path` is resolved relative to the *calling module's* location via Python's import machinery, not the process's working directory, which is why the directory needs an `__init__.py` at all.
