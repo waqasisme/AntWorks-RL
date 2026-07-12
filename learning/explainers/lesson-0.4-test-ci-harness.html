@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0.4 — Test + CI Harness</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --ink:#e8e9ec; --muted:#9aa1ad;
+    --line:#2a2f3a; --accent:#e8a33d; --accent2:#6cc17a; --bad:#e06c75; --code:#0b0d11;
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f6f6f4; --panel:#fff; --panel2:#f0f1ee; --ink:#1c1e24; --muted:#5c636f;
+      --line:#e2e3df; --accent:#c9821f; --accent2:#3f9e57; --code:#f2f3ef; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:820px;margin:0 auto;padding:48px 22px 96px;}
+  .kicker{color:var(--accent);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12.5px}
+  h1{font-size:34px;line-height:1.15;margin:.35em 0 .1em;letter-spacing:-.02em}
+  h2{font-size:23px;margin:2.1em 0 .5em;letter-spacing:-.01em;border-bottom:1px solid var(--line);padding-bottom:.35em}
+  h3{font-size:17px;margin:1.5em 0 .3em}
+  p{color:var(--ink)} .muted{color:var(--muted)}
+  .lead{font-size:18px;color:var(--muted)}
+  a{color:var(--accent)}
+  code{background:var(--code);padding:.12em .4em;border-radius:6px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
+  pre{background:var(--code);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;overflow-x:auto}
+  pre code{background:none;padding:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:18px 0}
+  .why{border-left:3px solid var(--accent)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:620px){.grid{grid-template-columns:1fr}}
+  .tool{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .tool b{color:var(--accent)}
+  .tag{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+    border-radius:999px;padding:2px 10px;font-size:12px;margin:2px 4px 2px 0}
+  .tree{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:13.5px;line-height:1.7;color:var(--muted)}
+  .tree b{color:var(--ink)}
+  /* quiz */
+  .quiz{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:16px 0}
+  .q{font-weight:600;margin-bottom:10px}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin:7px 0;cursor:pointer;
+    font:inherit;transition:.12s}
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{border-color:var(--accent2);background:color-mix(in srgb,var(--accent2) 16%,var(--panel2))}
+  .opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--panel2))}
+  .fb{margin-top:10px;font-size:14.5px;color:var(--muted);display:none}
+  .fb.show{display:block}
+  .checklist{list-style:none;padding:0}
+  .checklist li{padding:8px 0 8px 30px;position:relative;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;transition:color .15s}
+  .checklist li:before{content:"▢";position:absolute;left:4px;color:var(--accent);font-size:15px}
+  .checklist li:hover{color:var(--accent)}
+  .checklist li.checked:before{content:"▣";color:var(--accent2)}
+  .checklist li.checked{color:var(--muted)}
+  .pill{font-size:12px;color:var(--bg);background:var(--accent);border-radius:999px;padding:2px 10px;font-weight:700}
+  footer{margin-top:40px;color:var(--muted);font-size:14px}
+  .ref{border-left:3px solid var(--accent2);background:var(--panel);border-radius:0 12px 12px 0}
+  .dom{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2);font-weight:700}
+  .warn{border-left:3px solid var(--bad)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">AntWorks-RL · Phase 0 · Lesson 0.4</div>
+  <h1>Test + CI Harness</h1>
+  <p class="lead">0.2 gave you a local gate (pre-commit); 0.3 gave you a validated config. 0.4 closes the loop: a real <code>pytest</code> layout, your first property-based test with <code>hypothesis</code>, and a GitHub Actions workflow that runs lint/type/test on every push — so the gate follows the code even when you forget to run it, or push from a machine without the hook installed.</p>
+
+  <div class="card why">
+    <b>Why this lesson now?</b> The locked design commits to a <code>hypothesis</code> conservation-law suite for Phase 1.7 — food, population, and pheromone totals must never silently leak or duplicate across thousands of random steps. That kind of invariant testing only works if you already trust your test *harness* (layout, discovery, fixtures) before the invariants get complex. And CI matters starting now, not later: Phase 4's MAPPO will span dozens of files: buffer, GAE, PPO-clip, actor/critic nets. A red CI check catching a broken import or failing test on push is far cheaper than discovering it mid-training-run.
+  </div>
+
+  <h2>1 · pytest against the installed package</h2>
+  <p>CLAUDE.md's src-layout convention exists precisely so tests exercise the <i>installed</i> <code>antworks_rl</code> package (via <code>uv</code>'s editable install) rather than a package sitting on <code>sys.path</code> by accident of working directory — the same class of bug that "works on my machine, fails in CI" comes from.</p>
+  <pre><code># pyproject.toml
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"</code></pre>
+  <pre><code>uv run pytest              # discovers tests/test_*.py, *_test.py
+uv run pytest -v           # verbose, one line per test
+uv run pytest -k config    # run only tests matching "config"</code></pre>
+  <p class="muted">Recall from 0.3: pytest's default discovery is <code>test_*.py</code> / <code>*_test.py</code> — a test module named anything else (like <code>__init__.py</code>) is silently skipped, not an error. Worth internalizing since it's an easy silent-failure mode.</p>
+
+  <h2>2 · hypothesis — testing properties, not examples</h2>
+  <p>A normal <code>assert f(2) == 4</code> test checks one example. <b>hypothesis</b> generates many varied inputs (including adversarial edge cases: zero, negative, empty, huge) from a <i>strategy</i> you declare, and checks a <i>property</i> holds for all of them — then shrinks any failure to the smallest reproducing case.</p>
+  <pre><code>from hypothesis import given, strategies as st
+
+@given(st.integers(min_value=0), st.integers(min_value=0))
+def test_addition_commutes(a: int, b: int) -> None:
+    assert a + b == b + a</code></pre>
+  <p>This is exactly the tool for Phase 1.7's conservation laws later: "for any sequence of random valid steps, total food + eaten food + stored food is constant" is a <i>property</i>, not a fixed example — hypothesis is built for that shape of claim.</p>
+
+  <h2>3 · GitHub Actions — the gate that follows the code</h2>
+  <p>Pre-commit (0.2) only runs on machines where you installed the hook. A GitHub Actions workflow runs in a clean, identical environment on every push/PR — nobody can accidentally skip it.</p>
+  <pre><code># .github/workflows/ci.yml
+name: CI
+on: [push, pull_request]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv sync --all-extras --dev
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run ty check .
+        continue-on-error: true   # beta — informational only, per 0.2's caveat
+      - run: uv run pytest</code></pre>
+  <p class="muted"><code>continue-on-error: true</code> on the <code>ty</code> step is the CI expression of the same non-blocking stance from 0.2: report findings, don't fail the build on a beta checker's false positives.</p>
+
+  <h2>4 · Check yourself</h2>
+  <p class="muted">Immediate feedback — click an answer.</p>
+
+  <div class="quiz" data-correct="c">
+    <div class="q">Q1. What's the actual difference between a normal pytest assertion test and a hypothesis property test?</div>
+    <button class="opt" data-k="a">a) hypothesis tests run faster than normal pytest tests.</button>
+    <button class="opt" data-k="b">b) hypothesis tests don't need any assertions.</button>
+    <button class="opt" data-k="c">c) hypothesis generates many varied/adversarial inputs from a declared strategy and checks a property holds across all of them, shrinking any failure to a minimal case.</button>
+    <div class="fb" data-k="a">Not necessarily — hypothesis runs your test function many times (default 100 examples), so it's typically slower per-test, not faster.</div>
+    <div class="fb" data-k="b">Still needs assertions — the property itself is expressed as one.</div>
+    <div class="fb" data-k="c">Right — the shift is from "does this one example work" to "does this property hold for the whole input space," which is exactly what conservation-law invariants in Phase 1.7 need.</div>
+  </div>
+
+  <div class="quiz" data-correct="b">
+    <div class="q">Q2. Why does <code>continue-on-error: true</code> belong on the CI <code>ty check</code> step specifically, and not on <code>ruff check</code> or <code>pytest</code>?</div>
+    <button class="opt" data-k="a">a) ty is the slowest step, so failing it would slow down every PR.</button>
+    <button class="opt" data-k="b">b) ty is explicitly beta (per the 0.2 caveat) — a false positive there shouldn't be able to block a merge, unlike a real lint failure or failing test.</button>
+    <button class="opt" data-k="c">c) GitHub Actions requires at least one non-blocking step per workflow.</button>
+    <div class="fb" data-k="a">Speed isn't the reason — this is about trust in the signal, not runtime.</div>
+    <div class="fb" data-k="b">Exactly — it's the same documented trade-off from 0.2, now expressed at the CI level instead of just locally.</div>
+    <div class="fb" data-k="c">No such requirement exists in GitHub Actions.</div>
+  </div>
+
+  <div class="quiz" data-correct="a">
+    <div class="q">Q3. You write <code>tests/test_rng.py</code> but a colleague names theirs <code>tests/rng_check.py</code>. What happens under pytest's default discovery?</div>
+    <button class="opt" data-k="a">a) Your file is discovered and run; theirs is silently skipped — no error, no warning, it just never runs.</button>
+    <button class="opt" data-k="b">b) Neither file is discovered because the directory has mixed naming conventions.</button>
+    <button class="opt" data-k="c">c) pytest raises an error demanding consistent naming across the test directory.</button>
+    <div class="fb" data-k="a">Right — same silent-skip failure mode as 0.3's `tests/__init__.py` mistake, just with a different wrong filename. Always confirm a new test file with `pytest -v` or `pytest --collect-only` after adding it.</div>
+    <div class="fb" data-k="b">Discovery is per-file against the pattern, not an all-or-nothing directory check.</div>
+    <div class="fb" data-k="c">pytest never errors on this — it just quietly doesn't collect the mismatched file, which is the whole danger.</div>
+  </div>
+
+  <h2>5 · Your exercise <span class="pill">you code this</span></h2>
+  <p>Wire up the harness and prove it end to end. End-state:</p>
+  <ul class="checklist">
+    <li><code>[tool.pytest.ini_options]</code> added to <code>pyproject.toml</code> with at least <code>testpaths = ["tests"]</code>.</li>
+    <li>A small pure helper consistent with the locked "injected, seeded RNG" convention — e.g. <code>make_rng(seed: int) -> np.random.Generator</code> in <code>src/antworks_rl/rng.py</code> — plus a <b>hypothesis</b> property test asserting something non-trivial about it (e.g. same seed ⇒ identical output sequence; two distinct seeds ⇒ sequences differ with overwhelming probability).</li>
+    <li><code>uv run pytest -v</code> shows your new test(s) actually collected and passing (not silently skipped — confirm the test name appears in the output).</li>
+    <li><code>.github/workflows/ci.yml</code> exists, running (at minimum) <code>ruff check</code>, <code>ruff format --check</code>, <code>ty check</code> (non-blocking), and <code>pytest</code> on push/PR.</li>
+    <li>Push a commit (or open a PR) and confirm the Actions run appears on GitHub and goes green — paste or describe the run URL/status.</li>
+    <li>Break something on purpose (e.g. an intentionally failing assertion) on a throwaway branch, push, and confirm CI actually goes red — then revert it.</li>
+  </ul>
+  <div class="card why">
+    <b>Then come back to the chat.</b> Tell me you're done, or paste your <code>pyproject.toml</code> pytest config, the new test file, and the workflow YAML. I'll check them against the criteria above before we move to 0.5 (logging).
+  </div>
+
+  <h2>6 · Deep-dive references</h2>
+  <div class="card ref"><span class="dom">Python tooling</span><br><a href="https://docs.pytest.org/en/stable/">pytest documentation</a><br><span class="muted">Start with "Good Integration Practices" — it's the direct source for the src-layout / installed-package testing convention.</span></div>
+  <div class="card ref"><span class="dom">Python tooling</span><br><a href="https://hypothesis.readthedocs.io/">hypothesis documentation</a><br><span class="muted">Read "Writing your first test" and skim the "Numpy" strategies page — you'll want array strategies for Phase 1's pheromone-field invariants.</span></div>
+  <div class="card ref"><span class="dom">Engineering practice</span><br><a href="https://docs.github.com/en/actions/writing-workflows/quickstart">GitHub Actions — Quickstart</a><br><span class="muted">Covers the `on:`/`jobs:`/`steps:` shape used above.</span></div>
+  <div class="card ref"><span class="dom">Python tooling</span><br><a href="https://docs.astral.sh/uv/guides/integration/github/">uv — GitHub Actions integration guide</a><br><span class="muted">The official `astral-sh/setup-uv` action and caching recipe used in the workflow above.</span></div>
+
+  <footer>
+    AntWorks-RL · Lesson 0.4 · saved to <code>learning/explainers/</code> — reopen anytime.<br>
+    Terminology follows <code>learning/GLOSSARY.md</code>. Next: <b>0.5 — Logging</b>.
+  </footer>
+</div>
+
+<script>
+  document.querySelectorAll('.quiz').forEach(function(quiz){
+    var correct = quiz.getAttribute('data-correct');
+    quiz.querySelectorAll('.opt').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var k = btn.getAttribute('data-k');
+        quiz.querySelectorAll('.opt').forEach(function(b){ b.classList.remove('correct','wrong'); });
+        quiz.querySelectorAll('.fb').forEach(function(f){ f.classList.remove('show'); });
+        btn.classList.add(k===correct ? 'correct' : 'wrong');
+        if(k!==correct){ quiz.querySelector('.opt[data-k="'+correct+'"]').classList.add('correct'); }
+        var fb = quiz.querySelector('.fb[data-k="'+k+'"]'); if(fb) fb.classList.add('show');
+      });
+    });
+  });
+  document.querySelectorAll('.checklist').forEach(function(list, li){
+    list.querySelectorAll('li').forEach(function(item, i){
+      var key = 'awrl-check:' + location.pathname + ':' + li + ':' + i;
+      if(localStorage.getItem(key) === '1'){ item.classList.add('checked'); }
+      item.addEventListener('click', function(){
+        item.classList.toggle('checked');
+        localStorage.setItem(key, item.classList.contains('checked') ? '1' : '0');
+      });
+    });
+  });
+</script>
+</body>
+</html>

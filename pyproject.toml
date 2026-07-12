@@ -36,3 +36,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]   # pyflakes, pycodestyle, isort, pyupgrade, bugbear
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
