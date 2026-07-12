@@ -93,7 +93,7 @@ uv run ruff format .       # format
 uv run ruff check --fix .  # auto-fix what's safely fixable</code></pre>
 
   <h2>2 · ty — type checking, with a caveat</h2>
-  <p><b>ty</b> is Astral's new type checker (same team as uv/ruff), written in Rust for speed, but it is explicitly <b>beta</b> as of 2025 — expect false positives/negatives and a smaller rule surface than mature checkers. That's why the locked design treats it as <i>non-blocking</i> in CI for now, with <b>mypy</b> as the documented fallback if ty's gaps get in the way on real code (e.g. once PyTorch tensor typing gets involved in Phase 4).</p>
+  <p><b>ty</b> is Astral's new type checker (same team as uv/ruff), written in Rust for speed, but it is explicitly <b>beta</b> as of 2025 — expect false positives/negatives and a smaller rule surface than mature checkers. (e.g. once PyTorch tensor typing gets involved in Phase 4).</p>
   <pre><code>uv run ty check .          # or: uvx ty check .</code></pre>
   <div class="card warn">
     <b>Practical stance:</b> run <code>ty</code> locally and treat its output as signal, not law, while it's beta. Don't spend time fighting it to satisfy an edge case — note the gap and move on. This is a deliberate, documented trade-off, not carelessness.
@@ -168,7 +168,6 @@ uv run pre-commit run --all-files   # dry-run against the whole repo once</code>
   <div class="card ref"><span class="dom">Python tooling</span><br><a href="https://docs.astral.sh/ruff/">Ruff documentation</a><br><span class="muted">Start with "Configuration" and "Rules" — skim the rule-set table to see what <code>select</code> codes map to.</span></div>
   <div class="card ref"><span class="dom">Python tooling</span><br><a href="https://docs.astral.sh/ty/">ty documentation (Astral)</a><br><span class="muted">Note the "Beta" framing in the docs directly — this is the source for the maturity caveat above.</span></div>
   <div class="card ref"><span class="dom">Engineering practice</span><br><a href="https://pre-commit.com/">pre-commit framework docs</a><br><span class="muted">The hook-management tool used across most modern Python repos; not Astral-specific.</span></div>
-  <div class="card ref"><span class="dom">Type checking (fallback)</span><br><a href="https://mypy.readthedocs.io/">mypy documentation</a><br><span class="muted">Keep this bookmarked — the locked design names mypy as the fallback if ty's beta gaps bite on real PyTorch code later.</span></div>
 
   <footer>
     AntWorks-RL · Lesson 0.2 · saved to <code>learning/explainers/</code> — reopen anytime.<br>

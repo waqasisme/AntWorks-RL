@@ -109,7 +109,7 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run ty check .
       - run: uv run pytest</code></pre>
-  <p class="muted"><b>Update:</b> the original locked design treated <code>ty</code> as non-blocking in CI while it's beta. The user has since overridden that: <code>ty</code> stays fully blocking here — a finding gets fixed properly (or suppressed visibly and deliberately with a comment explaining why), never waved through by a soft CI gate. <code>CLAUDE.md</code> and the locked-design record reflect this now; mypy/pyright remain the documented fallback if a beta gap ever proves genuinely unworkable.</p>
+  <p class="muted"><b>Update:</b> the original locked design treated <code>ty</code> as non-blocking in CI while it's beta. The user has since overridden that: <code>ty</code> stays fully blocking here — a finding gets fixed properly (or suppressed visibly and deliberately with a comment explaining why), never waved through by a soft CI gate. <code>CLAUDE.md</code> and the locked-design record reflect this now</p>
 
   <h2>4 · Check yourself</h2>
   <p class="muted">Immediate feedback — click an answer.</p>

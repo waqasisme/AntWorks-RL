@@ -29,7 +29,7 @@ Curated, high-trust sources grounding the teaching. Explainers draw knowledge fr
 - [Ruff documentation](https://docs.astral.sh/ruff/)
   Linter + formatter. Use for: lint rule selection, format-on-save, pre-commit config.
 - [ty documentation (Astral type checker)](https://docs.astral.sh/ty/)
-  The chosen (beta) type checker. Use for: local typechecking; note maturity caveat — mypy/pyright are the drop-in fallback.
+  The chosen (beta) type checker. Use for: local typechecking.
 - [Hydra documentation](https://hydra.cc/)
   Hierarchical config composition + multirun sweeps. Use for: the config-driven pipeline and MAPPO-vs-IPPO sweeps.
 - [Pydantic documentation](https://docs.pydantic.dev/)
