@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0.5 — Logging (structlog + rich)</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --ink:#e8e9ec; --muted:#9aa1ad;
+    --line:#2a2f3a; --accent:#e8a33d; --accent2:#6cc17a; --bad:#e06c75; --code:#0b0d11;
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f6f6f4; --panel:#fff; --panel2:#f0f1ee; --ink:#1c1e24; --muted:#5c636f;
+      --line:#e2e3df; --accent:#c9821f; --accent2:#3f9e57; --code:#f2f3ef; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:820px;margin:0 auto;padding:48px 22px 96px;}
+  .kicker{color:var(--accent);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12.5px}
+  h1{font-size:34px;line-height:1.15;margin:.35em 0 .1em;letter-spacing:-.02em}
+  h2{font-size:23px;margin:2.1em 0 .5em;letter-spacing:-.01em;border-bottom:1px solid var(--line);padding-bottom:.35em}
+  h3{font-size:17px;margin:1.5em 0 .3em}
+  p{color:var(--ink)} .muted{color:var(--muted)}
+  .lead{font-size:18px;color:var(--muted)}
+  a{color:var(--accent)}
+  code{background:var(--code);padding:.12em .4em;border-radius:6px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
+  pre{background:var(--code);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;overflow-x:auto}
+  pre code{background:none;padding:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:18px 0}
+  .why{border-left:3px solid var(--accent)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:620px){.grid{grid-template-columns:1fr}}
+  .tool{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .tool b{color:var(--accent)}
+  .tag{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+    border-radius:999px;padding:2px 10px;font-size:12px;margin:2px 4px 2px 0}
+  .tree{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:13.5px;line-height:1.7;color:var(--muted)}
+  .tree b{color:var(--ink)}
+  /* quiz */
+  .quiz{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:16px 0}
+  .q{font-weight:600;margin-bottom:10px}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin:7px 0;cursor:pointer;
+    font:inherit;transition:.12s}
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{border-color:var(--accent2);background:color-mix(in srgb,var(--accent2) 16%,var(--panel2))}
+  .opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--panel2))}
+  .fb{margin-top:10px;font-size:14.5px;color:var(--muted);display:none}
+  .fb.show{display:block}
+  .checklist{list-style:none;padding:0}
+  .checklist li{padding:8px 0 8px 30px;position:relative;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;transition:color .15s}
+  .checklist li:before{content:"▢";position:absolute;left:4px;color:var(--accent);font-size:15px}
+  .checklist li:hover{color:var(--accent)}
+  .checklist li.checked:before{content:"▣";color:var(--accent2)}
+  .checklist li.checked{color:var(--muted)}
+  .pill{font-size:12px;color:var(--bg);background:var(--accent);border-radius:999px;padding:2px 10px;font-weight:700}
+  footer{margin-top:40px;color:var(--muted);font-size:14px}
+  .ref{border-left:3px solid var(--accent2);background:var(--panel);border-radius:0 12px 12px 0}
+  .dom{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2);font-weight:700}
+  .warn{border-left:3px solid var(--bad)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">AntWorks-RL · Phase 0 · Lesson 0.5</div>
+  <h1>Logging — stdlib + structlog + rich</h1>
+  <p class="lead">0.3 gave you a validated <code>Config</code>, already carrying a <code>logging.level</code> field nobody reads yet. 0.5 makes it real: one logging setup, chosen and leveled entirely from config, that prints richly-formatted colored logs on your dev machine and structured JSON lines wherever the run needs to be machine-parsed later.</p>
+
+  <div class="card why">
+    <b>Why this lesson now?</b> Phase 9's persistent mode logs continuous colony history to SQLite plus a per-ant event log — that only works cleanly if every log line is already structured key-value data, not a hand-formatted string you'd have to regex apart later. Get the shape right now, while there's almost no code depending on it, rather than retrofitting structure onto scattered <code>print()</code> calls once Phase 1's sim and Phase 4's MAPPO are both emitting them.
+  </div>
+
+  <h2>1 · Three layers, one pipeline</h2>
+  <div class="grid">
+    <div class="tool"><b>stdlib <code>logging</code></b><br><span class="muted">The actual sink: loggers, handlers, levels. Every other tool in this lesson ultimately routes through it — third-party libraries (Hydra, PyTorch later) already log via stdlib, so this is the layer that captures <i>everyone's</i> output, not just yours.</span></div>
+    <div class="tool"><b>structlog</b><br><span class="muted">Wraps logging calls with structured key-value context and a chain of <i>processors</i> that transform a log event before it's rendered — the last processor decides the final shape: JSON, or a colored console line.</span></div>
+    <div class="tool"><b>rich</b><br><span class="muted"><code>RichHandler</code> is a stdlib logging <code>Handler</code> that renders records as colorized, columnar console output — the human-facing renderer for local dev runs.</span></div>
+  </div>
+  <p>The pattern: structlog's processors do the structuring, then hand off to stdlib logging's formatting/handler layer for the actual rendering — <code>ConsoleRenderer</code> (or a rich-backed renderer) in dev, <code>JSONRenderer</code> in prod, both riding the same stdlib logger underneath.</p>
+
+  <h2>2 · Wiring structlog to stdlib logging</h2>
+  <pre><code>import logging
+import structlog
+
+structlog.configure(
+    processors=[
+        structlog.stdlib.add_log_level,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+    ],
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.stdlib.BoundLogger,
+)
+
+formatter = structlog.stdlib.ProcessorFormatter(
+    processor=structlog.processors.JSONRenderer(),   # or structlog.dev.ConsoleRenderer()
+)
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+logging.basicConfig(handlers=[handler], level=logging.INFO)
+
+log = structlog.get_logger()
+log.info("ant_spawned", ant_id=7, caste="minor")   # structured, not a format string</code></pre>
+  <p class="muted">Note the shape of a call: <code>log.info("event_name", key=value, ...)</code> — the event name is a short stable string, everything else is structured context. That's what makes the JSON output queryable later instead of just readable.</p>
+
+  <h2>3 · rich for the dev console</h2>
+  <p>Swap the handler for <code>RichHandler</code> when you want the colorized, columnar dev experience instead of raw JSON lines:</p>
+  <pre><code>from rich.logging import RichHandler
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+    handlers=[RichHandler(rich_tracebacks=True)],
+)</code></pre>
+  <p>Both paths are still stdlib <code>logging.Handler</code>s underneath — swapping dev↔prod is a config decision (which handler/renderer to install), not a code fork.</p>
+
+  <h2>4 · Driven by config, not a constant</h2>
+  <p>0.3's <code>LoggingConfig</code> only has <code>level</code>. Extend it with a <code>renderer</code> (or similarly-named) field so <code>conf/logging/{default,debug}.yaml</code> can select JSON vs. console the same way they already select the level — then call your setup function once, at the very top of <code>main()</code>, before anything else logs.</p>
+
+  <h2>5 · Check yourself</h2>
+  <p class="muted">Immediate feedback — click an answer.</p>
+
+  <div class="quiz" data-correct="c">
+    <div class="q">Q1. Why route structlog through stdlib <code>logging</code> at all, instead of having structlog print directly?</div>
+    <button class="opt" data-k="a">a) It's required — structlog cannot render output on its own.</button>
+    <button class="opt" data-k="b">b) It makes structlog's JSON output faster to generate.</button>
+    <button class="opt" data-k="c">c) Third-party libraries (Hydra now, PyTorch/PettingZoo later) already log via stdlib `logging` — routing through it means your JSON/console renderer captures their output too, not just your own calls.</button>
+    <div class="fb" data-k="a">structlog can render standalone, but that would give you a second, disconnected logging system running alongside stdlib's.</div>
+    <div class="fb" data-k="b">Not a performance claim — this is about which log sources actually get captured.</div>
+    <div class="fb" data-k="c">Right — a unified sink is the whole point; two parallel logging systems is exactly the kind of inconsistency 0.2's tooling lessons were about avoiding.</div>
+  </div>
+
+  <div class="quiz" data-correct="b">
+    <div class="q">Q2. What's structurally different about `log.info("ant_spawned", ant_id=7, caste="minor")` versus `logging.info(f"ant {ant_id} spawned as {caste}")`?</div>
+    <button class="opt" data-k="a">a) Nothing — they produce identical log files.</button>
+    <button class="opt" data-k="b">b) The structured call keeps `ant_id` and `caste` as separate typed fields all the way to the renderer, so a JSON renderer emits real JSON keys — the f-string version has already flattened everything into one opaque message string before logging even sees it.</button>
+    <button class="opt" data-k="c">c) The f-string version is faster because it avoids structlog's processor chain.</button>
+    <div class="fb" data-k="a">They look similar in a console, but the f-string version has destroyed the structure a JSON renderer or later SQLite event log (Phase 9) would need.</div>
+    <div class="fb" data-k="b">Exactly — this is *why* structured logging exists: the data survives as data, not as text you'd have to parse back out.</div>
+    <div class="fb" data-k="c">Both still go through Python's logging machinery either way; the difference is data shape, not speed.</div>
+  </div>
+
+  <div class="quiz" data-correct="a">
+    <div class="q">Q3. Per this project's conventions, where should the choice between JSON and console (rich) rendering live?</div>
+    <button class="opt" data-k="a">a) In config (e.g. a `logging.renderer` field), so it's overridable per run/environment without touching code — the same pattern as `logging=debug` from 0.3.</button>
+    <button class="opt" data-k="b">b) Hardcoded based on whether `sys.stdout.isatty()` is true, with no config involved.</button>
+    <button class="opt" data-k="c">c) It doesn't matter — always use JSON everywhere, including local dev.</button>
+    <div class="fb" data-k="a">Right — config-driven selection is the established pattern from 0.3's config groups; it also means CI/prod can force JSON while your terminal still gets rich output, from the same code path.</div>
+    <div class="fb" data-k="b">A TTY check is a reasonable *default*, but hardcoding it removes the ability to force JSON locally for debugging a prod-log issue, or force rich output in a CI log viewer that wants it.</div>
+    <div class="fb" data-k="c">Rich console output exists precisely because raw JSON is unpleasant to read live during dev — that's the whole reason this lesson wires up both.</div>
+  </div>
+
+  <h2>6 · Your exercise <span class="pill">you code this</span></h2>
+  <p>Give the repo real, config-driven logging. End-state:</p>
+  <ul class="checklist">
+    <li><code>LoggingConfig</code> (in <code>src/antworks_rl/__init__.py</code> or wherever you've since moved config models) gains a second field alongside <code>level</code> — e.g. <code>renderer: Literal["console", "json"]</code> — with a sensible default.</li>
+    <li><code>conf/logging/default.yaml</code> and <code>conf/logging/debug.yaml</code> updated/extended to set this field explicitly (don't leave it silently defaulted the way <code>level</code> nearly was in 0.3).</li>
+    <li>A <code>setup_logging(config: LoggingConfig) -> None</code> function (e.g. in a new <code>src/antworks_rl/logging.py</code>) that configures structlog + stdlib logging, choosing <code>RichHandler</code>/console rendering or JSON rendering based on <code>config.renderer</code>, and the level from <code>config.level</code>.</li>
+    <li><code>main()</code> calls <code>setup_logging(...)</code> immediately after validating <code>Config</code>, before any other logging happens, and emits at least one structured log call (e.g. <code>log.info("config_loaded", seed=config.seed)</code>) in place of the old <code>print(config)</code>.</li>
+    <li>Prove both renderers work: run with the console/default config and see colorized rich output; override to the JSON renderer and confirm each line is valid, parseable JSON (e.g. pipe through <code>python -m json.tool</code> or assert in a test).</li>
+    <li>Prove level filtering works: a <code>log.debug(...)</code> call is silent at the default level and visible when you override to the debug config group.</li>
+    <li>At least one <code>pytest</code> test exercising <code>setup_logging</code> — e.g. asserting that a captured log line under the JSON renderer round-trips through <code>json.loads</code>.</li>
+  </ul>
+  <div class="card why">
+    <b>Then come back to the chat.</b> Tell me you're done, or paste your <code>LoggingConfig</code>, <code>setup_logging</code>, and the updated <code>conf/logging/*.yaml</code>. I'll check them against the criteria above before we move to 0.6 (docs that lead the code).
+  </div>
+
+  <h2>7 · Deep-dive references</h2>
+  <div class="card ref"><span class="dom">Python tooling</span><br><a href="https://www.structlog.org/en/stable/standard-library.html">structlog — Standard Library Logging</a><br><span class="muted">The canonical source for the `ProcessorFormatter` / `wrap_for_formatter` bridge pattern used above.</span></div>
+  <div class="card ref"><span class="dom">Python tooling</span><br><a href="https://www.structlog.org/en/stable/getting-started.html">structlog — Getting Started</a><br><span class="muted">Processor chains, `structlog.configure`, bound loggers and context — the concepts underneath the pipeline above.</span></div>
+  <div class="card ref"><span class="dom">Python tooling</span><br><a href="https://rich.readthedocs.io/en/stable/logging.html">Rich — Logging Handler</a><br><span class="muted">`RichHandler` parameters (`rich_tracebacks`, `markup`, `show_path`) worth tuning for a pleasant dev console.</span></div>
+  <div class="card ref"><span class="dom">Python stdlib</span><br><a href="https://docs.python.org/3/howto/logging.html">Python Logging HOWTO</a><br><span class="muted">Logger hierarchy, levels, handlers, formatters — the foundation every layer above sits on.</span></div>
+
+  <footer>
+    AntWorks-RL · Lesson 0.5 · saved to <code>learning/explainers/</code> — reopen anytime.<br>
+    Terminology follows <code>learning/GLOSSARY.md</code>. Next: <b>0.6 — Docs that lead the code</b>.
+  </footer>
+</div>
+
+<script>
+  document.querySelectorAll('.quiz').forEach(function(quiz){
+    var correct = quiz.getAttribute('data-correct');
+    quiz.querySelectorAll('.opt').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var k = btn.getAttribute('data-k');
+        quiz.querySelectorAll('.opt').forEach(function(b){ b.classList.remove('correct','wrong'); });
+        quiz.querySelectorAll('.fb').forEach(function(f){ f.classList.remove('show'); });
+        btn.classList.add(k===correct ? 'correct' : 'wrong');
+        if(k!==correct){ quiz.querySelector('.opt[data-k="'+correct+'"]').classList.add('correct'); }
+        var fb = quiz.querySelector('.fb[data-k="'+k+'"]'); if(fb) fb.classList.add('show');
+      });
+    });
+  });
+</script>
+</body>
+</html>

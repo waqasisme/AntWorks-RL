@@ -108,9 +108,8 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run ty check .
-        continue-on-error: true   # beta — informational only, per 0.2's caveat
       - run: uv run pytest</code></pre>
-  <p class="muted"><code>continue-on-error: true</code> on the <code>ty</code> step is the CI expression of the same non-blocking stance from 0.2: report findings, don't fail the build on a beta checker's false positives.</p>
+  <p class="muted"><b>Update:</b> the original locked design treated <code>ty</code> as non-blocking in CI while it's beta. The user has since overridden that: <code>ty</code> stays fully blocking here — a finding gets fixed properly (or suppressed visibly and deliberately with a comment explaining why), never waved through by a soft CI gate. <code>CLAUDE.md</code> and the locked-design record reflect this now; mypy/pyright remain the documented fallback if a beta gap ever proves genuinely unworkable.</p>
 
   <h2>4 · Check yourself</h2>
   <p class="muted">Immediate feedback — click an answer.</p>
@@ -126,13 +125,13 @@ jobs:
   </div>
 
   <div class="quiz" data-correct="b">
-    <div class="q">Q2. Why does <code>continue-on-error: true</code> belong on the CI <code>ty check</code> step specifically, and not on <code>ruff check</code> or <code>pytest</code>?</div>
-    <button class="opt" data-k="a">a) ty is the slowest step, so failing it would slow down every PR.</button>
-    <button class="opt" data-k="b">b) ty is explicitly beta (per the 0.2 caveat) — a false positive there shouldn't be able to block a merge, unlike a real lint failure or failing test.</button>
-    <button class="opt" data-k="c">c) GitHub Actions requires at least one non-blocking step per workflow.</button>
-    <div class="fb" data-k="a">Speed isn't the reason — this is about trust in the signal, not runtime.</div>
-    <div class="fb" data-k="b">Exactly — it's the same documented trade-off from 0.2, now expressed at the CI level instead of just locally.</div>
-    <div class="fb" data-k="c">No such requirement exists in GitHub Actions.</div>
+    <div class="q">Q2. This project deliberately keeps <code>ty check</code> blocking in CI even though `ty` is beta. What's the trade-off being accepted?</div>
+    <button class="opt" data-k="a">a) None — a beta type checker can't produce false positives, so there's no real trade-off.</button>
+    <button class="opt" data-k="b">b) An occasional beta false positive can block a merge and cost you a suppression comment or workaround; in exchange, no real type error can ever slip through silently via a soft gate.</button>
+    <button class="opt" data-k="c">c) It makes CI run faster, since blocking steps short-circuit the workflow.</button>
+    <div class="fb" data-k="a">Beta checkers absolutely produce false positives — that's precisely why the original design proposed making it non-blocking. The point here is this project chose to accept that cost instead of hiding findings behind a soft gate.</div>
+    <div class="fb" data-k="b">Right — it's a deliberate "fix or visibly suppress, never silently ignore" stance, overriding the original beta-caveat design from 0.2/0002-locked-design-decisions.md.</div>
+    <div class="fb" data-k="c">Blocking vs. non-blocking doesn't change step runtime — it changes whether a failure stops the workflow's reported status.</div>
   </div>
 
   <div class="quiz" data-correct="a">

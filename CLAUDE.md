@@ -15,7 +15,7 @@ This is a **learning project**. The user writes ALL project code themselves, one
 
 ## Locked toolchain (do not substitute without the user's say-so)
 - **Package/deps**: `uv` (lockfile committed). **Python** ≥ 3.12.
-- **Lint/format**: `ruff`. **Type checker**: `ty` (Astral; beta → non-blocking in CI, mypy/pyright are the fallback).
+- **Lint/format**: `ruff`. **Type checker**: `ty`.
 - **Config**: `Hydra` (compose/CLI/sweeps) + `Pydantic` (typed validation of the composed config).
 - **Tests**: `pytest` + `hypothesis` (property-based invariants).
 - **RL**: `PyTorch`; custom MAPPO is the from-scratch centrepiece; `PettingZoo` Parallel API is the env contract; `RLlib` is the second Trainer backend.

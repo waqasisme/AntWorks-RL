@@ -20,7 +20,7 @@ The design tree resolved during the `/grill-me` session. These are settled; teac
 ## Framework & infra
 - PyTorch; custom MAPPO centrepiece; **PettingZoo** env contract; shared env/config/eval/logging + thin two-backend **Trainer protocol** (custom + RLlib); **IPPO-vs-MAPPO** first benchmark.
 - Species = config-driven trait profiles; multi-colony-capable from day one (single colony = N=1).
-- Config: **Hydra** (compose/CLI/sweeps) + **Pydantic** (typed validation). Deps: **uv**. Lint/format: **ruff**. Types: **ty** (mypy fallback, non-blocking CI while beta). Tests: **pytest** + **hypothesis**. Seed from config, injected RNG everywhere.
+- Config: **Hydra** (compose/CLI/sweeps) + **Pydantic** (typed validation). Deps: **uv**. Lint/format: **ruff**. Types: **ty**. Tests: **pytest** + **hypothesis**. Seed from config, injected RNG everywhere.
 - Logging: stdlib `logging` + `structlog` (JSON prod) + `rich` (dev). Metrics: **W&B** primary + TensorBoard fallback, behind a logger interface.
 - **SQLite** (repository layer, SQLModel) = persistent-mode history + per-ant event log (narrative hooks).
 

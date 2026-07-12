@@ -36,6 +36,10 @@ Curated, high-trust sources grounding the teaching. Explainers draw knowledge fr
   Runtime-validated typed models. Use for: validating composed Hydra configs into typed objects.
 - [Hypothesis documentation](https://hypothesis.readthedocs.io/)
   Property-based testing. Use for: conservation-law invariants over random rollouts.
+- [structlog documentation](https://www.structlog.org/en/stable/) — [Standard Library Logging integration](https://www.structlog.org/en/stable/standard-library.html)
+  Structured logging with pluggable processors/renderers. Use for: JSON logs in prod, `ConsoleRenderer` in dev, routing through stdlib `logging` so third-party libraries' log records are captured too.
+- [Rich documentation — Logging Handler](https://rich.readthedocs.io/en/stable/logging.html) ([reference](https://rich.readthedocs.io/en/stable/reference/logging.html))
+  `RichHandler` for colorized, columnar console log output. Use for: the dev-console renderer wired in Lesson 0.5.
 
 ## Knowledge — Ant Biology (the science we honour)
 
