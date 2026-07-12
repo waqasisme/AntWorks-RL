@@ -5,10 +5,17 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v3
-      - run: uv sync --all-extras --dev
-      - run: uv run ruff check .
-      - run: uv run ruff format --check .
-      - run: uv run ty check .
-      - run: uv run pytest
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v3
+      - name: Sync UV
+        run: uv sync --all-extras --dev
+      - name: Run Ruff Check
+        run: uv run ruff check .
+      - name: Run Ruff Format Check
+        run: uv run ruff format --check .
+      - name: Run Ty Check
+        run: uv run ty check .
+      - name: Run Pytest
+        run: uv run pytest
