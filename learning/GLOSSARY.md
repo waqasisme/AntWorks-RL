@@ -67,3 +67,7 @@ A serializable, render-agnostic description of world state emitted each step; de
 
 **Trainer protocol**:
 A thin interface (`setup / train_iteration / evaluate / checkpoint`) with two backends — custom-MAPPO and RLlib — so the same env/config/eval powers a fair benchmark.
+
+**Structured logging**:
+Emitting each log event as an event name plus typed key-value fields (`log.info("ant_spawned", ant_id=7)`) that survive as data all the way to the renderer, rather than a pre-formatted message string. A JSON renderer then produces queryable records; a console (rich) renderer produces human-readable output — a config-selected choice over the same call sites. The shape the Phase-9 SQLite event log depends on.
+_Avoid_: f-string log messages for anything you'd later want to query.

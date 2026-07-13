@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 0.6 — Docs that lead the code</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --ink:#e8e9ec; --muted:#9aa1ad;
+    --line:#2a2f3a; --accent:#e8a33d; --accent2:#6cc17a; --bad:#e06c75; --code:#0b0d11;
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f6f6f4; --panel:#fff; --panel2:#f0f1ee; --ink:#1c1e24; --muted:#5c636f;
+      --line:#e2e3df; --accent:#c9821f; --accent2:#3f9e57; --code:#f2f3ef; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:820px;margin:0 auto;padding:48px 22px 96px;}
+  .kicker{color:var(--accent);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12.5px}
+  h1{font-size:34px;line-height:1.15;margin:.35em 0 .1em;letter-spacing:-.02em}
+  h2{font-size:23px;margin:2.1em 0 .5em;letter-spacing:-.01em;border-bottom:1px solid var(--line);padding-bottom:.35em}
+  h3{font-size:17px;margin:1.5em 0 .3em}
+  p{color:var(--ink)} .muted{color:var(--muted)}
+  .lead{font-size:18px;color:var(--muted)}
+  a{color:var(--accent)}
+  code{background:var(--code);padding:.12em .4em;border-radius:6px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
+  pre{background:var(--code);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;overflow-x:auto}
+  pre code{background:none;padding:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:18px 0}
+  .why{border-left:3px solid var(--accent)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:620px){.grid{grid-template-columns:1fr}}
+  .tool{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .tool b{color:var(--accent)}
+  .tag{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+    border-radius:999px;padding:2px 10px;font-size:12px;margin:2px 4px 2px 0}
+  .tree{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:13.5px;line-height:1.7;color:var(--muted)}
+  .tree b{color:var(--ink)}
+  /* quiz */
+  .quiz{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:16px 0}
+  .q{font-weight:600;margin-bottom:10px}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin:7px 0;cursor:pointer;
+    font:inherit;transition:.12s}
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{border-color:var(--accent2);background:color-mix(in srgb,var(--accent2) 16%,var(--panel2))}
+  .opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--panel2))}
+  .fb{margin-top:10px;font-size:14.5px;color:var(--muted);display:none}
+  .fb.show{display:block}
+  .checklist{list-style:none;padding:0}
+  .checklist li{padding:8px 0 8px 30px;position:relative;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;transition:color .15s}
+  .checklist li:before{content:"▢";position:absolute;left:4px;color:var(--accent);font-size:15px}
+  .checklist li:hover{color:var(--accent)}
+  .checklist li.checked:before{content:"▣";color:var(--accent2)}
+  .checklist li.checked{color:var(--muted)}
+  .pill{font-size:12px;color:var(--bg);background:var(--accent);border-radius:999px;padding:2px 10px;font-weight:700}
+  footer{margin-top:40px;color:var(--muted);font-size:14px}
+  .ref{border-left:3px solid var(--accent2);background:var(--panel);border-radius:0 12px 12px 0}
+  .dom{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2);font-weight:700}
+  .warn{border-left:3px solid var(--bad)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">AntWorks-RL · Phase 0 · Lesson 0.6</div>
+  <h1>Docs that lead the code</h1>
+  <p class="lead">Phase 0 is nearly done: you have a typed, tested, config-driven, logging-wired skeleton. This lesson closes it by making the docs honest — <b>formalizing</b> the <code>CLAUDE.md</code> that was seeded on day one with the conventions you actually established in 0.1–0.5, and writing a lean, clearly-labelled <code>README.md</code> that says what the project <i>is</i>, what it <i>does today</i>, and what is still just vision.</p>
+
+  <div class="card why">
+    <b>Why this lesson now?</b> This is a portfolio project (see MISSION): the README is the first thing a hiring manager reads, and nothing damages credibility faster than a README describing a running ant colony that doesn't exist yet. Phase 0 is exactly the right moment — there are now real conventions worth writing down, but little enough code that documenting it takes minutes, not a retrospective archaeology dig. Get the docs-track-reality habit locked before Phase 1's simulation multiplies the surface area.
+  </div>
+
+  <h2>1 · The one rule: docs track reality</h2>
+  <p>This repo already has a stated principle (you applied it yourself back in 0.1 — see <code>learning-records/0003</code>): <b>documentation describes what the code actually does, never what you wish it did.</b> Intent and plans are legitimate — but they live in clearly-labelled <i>vision</i>/<i>roadmap</i> sections, never disguised as as-built fact.</p>
+  <div class="card warn">
+    <b>The failure mode this prevents.</b> "Aspirational docs" read as lies the moment a reader runs the code and it doesn't match. A README that says <i>"watch ants forage with <code>uv run antworks-rl</code>"</i> when that command just logs a config and exits is worse than no README — it burns trust. The fix is a discipline, not a tool: every concrete claim must be true <i>today</i>, and everything else is explicitly flagged as not-yet.</p>
+  </div>
+  <p>This isn't a personal quirk — it's the same instinct behind <b>Architecture Decision Records</b> (which your <code>learning-records/</code> already are): capture <i>why</i>, append-only, tied to what really happened. Docs earn their keep by being trustworthy.</p>
+
+  <h2>2 · Two documents, two jobs</h2>
+  <p>The <a href="https://diataxis.fr/">Diátaxis</a> framework is a useful lens: documentation serves different <i>needs</i>, and mixing them makes all of them worse. For Phase 0 you're writing two docs with sharply different audiences:</p>
+  <div class="grid">
+    <div class="tool"><b>README.md</b><br><span class="muted"><i>Audience: a human landing on the repo cold.</i> Orientation. What is this, what works today, how do I run what exists, where do I go next. Short. Honest status banner up top.</span></div>
+    <div class="tool"><b>CLAUDE.md</b><br><span class="muted"><i>Audience: Claude (and future you) working <b>in</b> the repo.</i> The conventions the code follows, so contributions match. Reference material — the "how we do things here" that 0.1–0.5 established.</span></div>
+  </div>
+  <p class="muted"><code>ARCHITECTURE.md</code> is deliberately <b>not</b> written yet — there's no real structure to describe until Phase 1 exists. Documenting an architecture you haven't built would violate rule #1. It's scheduled for the end of Phase 1, on purpose.</p>
+
+  <h2>3 · The conventions to capture</h2>
+  <p>Your <code>CLAUDE.md</code> was seeded early with a "grow this list through Phase 0" note. Now you cash that in: fold in the conventions you actually established, each already backed by a decision in <code>learning-records/</code>. The real ones from 0.1–0.5:</p>
+  <ul>
+    <li><b>src-layout</b>, tests exercise the <i>installed</i> package (0.1) — and the package is <code>antworks_rl</code>, not <code>antworks</code> (0003).</li>
+    <li><b>Astral toolchain + gates</b>: <code>uv</code> / <code>ruff</code> / <code>ty</code>; <b><code>ty</code> is blocking in CI</b> — findings get fixed or visibly suppressed, never silenced with a non-blocking gate (0005).</li>
+    <li><b>Config spine</b>: Hydra composition → Pydantic validation; config groups (e.g. <code>logging=debug</code>); Hydra's relative <code>config_path</code> resolves as a module, needing <code>conf/__init__.py</code> (0004).</li>
+    <li><b>Injected, seeded RNG</b> everywhere — no global <code>random</code>/<code>np.random</code>.</li>
+    <li><b>Structured, config-driven logging</b> (0.5): event + key-value fields, JSON vs console by config; and the caveat that <b>Hydra owns the root logger</b>, so setup must force its handlers (0006).</li>
+    <li><b>Flat test layout</b>: unique-basename modules directly under <code>tests/</code>, no stdlib-shadowing test packages (0007).</li>
+  </ul>
+  <p>Don't invent conventions here — only write down what the code and the learning-records already show to be true. If you're tempted to document something the code doesn't do yet, that's a roadmap item, not a convention.</p>
+
+  <h2>4 · The status banner</h2>
+  <p>The single most important honesty device in the README is a status line near the top that sets expectations before anyone runs anything:</p>
+<pre><code>&gt; **Status: Phase 0 (foundation) complete — not yet a runnable simulation.**
+&gt; The toolchain, config, logging, and test harness are in place; the ant
+&gt; simulation itself begins in Phase 1. See `learning/ROADMAP.md` for the plan.</code></pre>
+  <p>Now the "vision" section below it can describe the full learned-stigmergy ant colony in all its glory — because the reader already knows that's the destination, not the current stop. Label it (<i>"Vision"</i> / <i>"Where this is going"</i>) so the boundary between real and planned is unmissable.</p>
+
+  <h2>5 · Check yourself</h2>
+  <p class="muted">Immediate feedback — click an answer.</p>
+
+  <div class="quiz" data-correct="b">
+    <div class="q">Q1. The README's quickstart is tempting to write as <code>uv run antworks-rl</code> → "watch the colony forage". Right now that command just validates config and emits one log line. What should the README say?</div>
+    <button class="opt" data-k="a">a) Write the foraging description anyway — it'll be true soon, and it reads better.</button>
+    <button class="opt" data-k="b">b) Describe exactly what the command does today (loads+validates config, logs it), and put the foraging vision in a clearly-labelled "Where this is going" section.</button>
+    <button class="opt" data-k="c">c) Omit the quickstart entirely until Phase 1 makes it exciting.</button>
+    <div class="fb" data-k="a">This is precisely the aspirational-docs trap — the first reader who runs it and sees no ants stops trusting the whole README.</div>
+    <div class="fb" data-k="b">Right — real claims for what exists, labelled vision for what doesn't. Both are legitimate; conflating them is the sin.</div>
+    <div class="fb" data-k="c">A quickstart for what <i>does</i> exist is still useful (it proves the skeleton works). Honesty doesn't require silence — just accurate labelling.</div>
+  </div>
+
+  <div class="quiz" data-correct="c">
+    <div class="q">Q2. A fact belongs in <b>CLAUDE.md</b> rather than <b>README.md</b> when it is…</div>
+    <button class="opt" data-k="a">a) …a marketing sentence about why the project is cool.</button>
+    <button class="opt" data-k="b">b) …the one-line install command a newcomer needs.</button>
+    <button class="opt" data-k="c">c) …a convention a contributor must follow to keep new code consistent (e.g. "no global RNG — inject a seeded generator").</button>
+    <div class="fb" data-k="a">That's README orientation material (or the vision section), aimed at a visitor, not a contributor.</div>
+    <div class="fb" data-k="b">Onboarding/orientation → README. CLAUDE.md is for the conventions of working *inside* the code.</div>
+    <div class="fb" data-k="c">Exactly — CLAUDE.md is reference material for anyone (including Claude) writing code here; conventions are its core content.</div>
+  </div>
+
+  <div class="quiz" data-correct="a">
+    <div class="q">Q3. Why is <code>ARCHITECTURE.md</code> deliberately <i>not</i> written in Lesson 0.6?</div>
+    <button class="opt" data-k="a">a) There's no real simulation structure to describe yet; documenting an unbuilt architecture would violate "docs track reality". It's scheduled for the end of Phase 1.</button>
+    <button class="opt" data-k="b">b) Architecture docs are never worth writing.</button>
+    <button class="opt" data-k="c">c) Because CLAUDE.md already fully covers architecture.</button>
+    <div class="fb" data-k="a">Right — you can only honestly document structure that exists. Writing it now would be exactly the aspirational-docs mistake this lesson warns against.</div>
+    <div class="fb" data-k="b">They're valuable — just not before there's an architecture. Timing is the point, not worth.</div>
+    <div class="fb" data-k="c">CLAUDE.md holds conventions, not the eventual module map / data-flow that ARCHITECTURE.md will carry post-Phase-1.</div>
+  </div>
+
+  <h2>6 · Your exercise <span class="pill">you code this</span></h2>
+  <p>Make the repo's docs honest and complete for the end of Phase 0. End-state:</p>
+  <ul class="checklist">
+    <li><code>CLAUDE.md</code>'s <b>Conventions</b> section is formalized to reflect the <i>actual</i> conventions from 0.1–0.5 — at minimum: src-layout + installed-package testing, the <code>antworks_rl</code> package name, <code>uv</code>/<code>ruff</code>/<code>ty</code> with <b>ty blocking in CI</b>, Hydra+Pydantic config spine with config groups, injected seeded RNG (no globals), structured config-driven logging (+ Hydra-owns-root-logger caveat), and the flat test layout.</li>
+    <li>Every convention you write is true of the code <i>right now</i> — cross-check each claim against a real file (<code>src/antworks_rl/</code>, <code>src/conf/</code>, <code>tests/</code>, the CI workflow). No aspirational entries.</li>
+    <li><code>README.md</code> exists and is non-empty, opening with the project name + a one-line pitch and a <b>status banner</b> that states Phase 0 is complete and the simulation is not yet runnable.</li>
+    <li>README has a <b>Quickstart</b> describing only what works today: <code>uv sync</code>, <code>uv run antworks-rl</code> (and what it actually does — loads/validates config, logs it), <code>uv run pytest</code>, the lint/type commands.</li>
+    <li>README has a clearly-labelled <b>Vision / Where this is going</b> section for the learned-stigmergy colony — visibly separated from the "what works today" content, with a pointer to <code>learning/ROADMAP.md</code>.</li>
+    <li>You do <b>not</b> create <code>ARCHITECTURE.md</code> (it's intentionally deferred to end of Phase 1).</li>
+    <li>Sanity pass: re-read both docs as if you'd never seen the repo. Every command runs; every stated fact matches a file. Optionally run <code>uv run ruff check</code> / <code>uv run pytest</code> once more so the "it's all green" claim in the README is literally true.</li>
+  </ul>
+  <div class="card why">
+    <b>Then come back to the chat.</b> Tell me you're done, or paste your <code>README.md</code> and the updated <code>CLAUDE.md</code> conventions. I'll check them against reality — literally diffing claims against files — before we close Phase 0 and open <b>Phase 1 · Lesson 1.1 (Grid &amp; entities)</b>. Tip: run the repo-local <code>/update-docs</code> command as a first-pass drift check.
+  </div>
+
+  <h2>7 · Deep-dive references</h2>
+  <div class="card ref"><span class="dom">Documentation</span><br><a href="https://diataxis.fr/">Diátaxis — a systematic framework for technical docs</a><br><span class="muted">Tutorials vs how-to vs reference vs explanation — why README, CLAUDE.md, and the explainers are different documents with different rules.</span></div>
+  <div class="card ref"><span class="dom">Engineering practice</span><br><a href="https://adr.github.io/">Architecture Decision Records</a><br><span class="muted">The append-only "record the why" pattern your <code>learning-records/</code> already embody; read Nygard's original for the rationale.</span></div>
+  <div class="card ref"><span class="dom">Documentation</span><br><a href="https://www.makeareadme.com/">Make a README</a><br><span class="muted">A checklist for what a good README contains — map it against your status-banner + quickstart + vision structure.</span></div>
+  <div class="card ref"><span class="dom">Science communication</span><br><a href="https://press.princeton.edu/books/paperback/9780691138794/ant-encounters">Gordon — <i>Ant Encounters</i></a><br><span class="muted">Off-topic-but-apt: Gordon is scrupulous about separating observed ant behaviour from tempting anthropomorphic narrative — the same discipline as separating "what the code does" from "what we hope it'll do".</span></div>
+
+  <footer>
+    AntWorks-RL · Lesson 0.6 · saved to <code>learning/explainers/</code> — reopen anytime.<br>
+    Terminology follows <code>learning/GLOSSARY.md</code>. Next: <b>Phase 1 · 1.1 — Grid &amp; entities</b> (the simulation begins).
+  </footer>
+</div>
+
+<script>
+  document.querySelectorAll('.quiz').forEach(function(quiz){
+    var correct = quiz.getAttribute('data-correct');
+    quiz.querySelectorAll('.opt').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var k = btn.getAttribute('data-k');
+        quiz.querySelectorAll('.opt').forEach(function(b){ b.classList.remove('correct','wrong'); });
+        quiz.querySelectorAll('.fb').forEach(function(f){ f.classList.remove('show'); });
+        btn.classList.add(k===correct ? 'correct' : 'wrong');
+        if(k!==correct){ quiz.querySelector('.opt[data-k="'+correct+'"]').classList.add('correct'); }
+        var fb = quiz.querySelector('.fb[data-k="'+k+'"]'); if(fb) fb.classList.add('show');
+      });
+    });
+  });
+  document.querySelectorAll('.checklist').forEach(function(list, li){
+    list.querySelectorAll('li').forEach(function(item, i){
+      var key = 'awrl-check:' + location.pathname + ':' + li + ':' + i;
+      if(localStorage.getItem(key) === '1'){ item.classList.add('checked'); }
+      item.addEventListener('click', function(){
+        item.classList.toggle('checked');
+        localStorage.setItem(key, item.classList.contains('checked') ? '1' : '0');
+      });
+    });
+  });
+</script>
+</body>
+</html>

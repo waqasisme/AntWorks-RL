@@ -41,6 +41,17 @@ Curated, high-trust sources grounding the teaching. Explainers draw knowledge fr
 - [Rich documentation — Logging Handler](https://rich.readthedocs.io/en/stable/logging.html) ([reference](https://rich.readthedocs.io/en/stable/reference/logging.html))
   `RichHandler` for colorized, columnar console log output. Use for: the dev-console renderer wired in Lesson 0.5.
 
+## Knowledge — Documentation & Project Hygiene
+
+- [Diátaxis — a systematic framework for technical documentation](https://diataxis.fr/)
+  Splits docs into tutorials / how-to / reference / explanation by user need. Use for: deciding what belongs in README (orientation) vs CLAUDE.md/ARCHITECTURE.md (reference/explanation) vs the `learning/` explainers (tutorials).
+- [Architecture Decision Records (ADR)](https://adr.github.io/) ([Michael Nygard's original post](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions.html))
+  Lightweight, append-only records of *why* a decision was made. Use for: the pattern our `learning/learning-records/` already follows; grounding "docs track reality" in an established practice.
+- [Make a README](https://www.makeareadme.com/)
+  What a good README contains and why. Use for: the lean, honestly-scoped README written in Lesson 0.6 (pitch + status + quickstart + pointers).
+- [Keep a Changelog](https://keepachangelog.com/) · [Semantic Versioning](https://semver.org/)
+  Conventions for recording change and versioning. Use for: later phases when the project has releasable surface; noted now so the habit is on the radar.
+
 ## Knowledge — Ant Biology (the science we honour)
 
 - [Deborah M. Gordon, *Ant Encounters: Interaction Networks and Colony Behavior* (Princeton)](https://press.princeton.edu/books/paperback/9780691138794/ant-encounters)

@@ -194,6 +194,16 @@ logging.basicConfig(
       });
     });
   });
+  document.querySelectorAll('.checklist').forEach(function(list, li){
+    list.querySelectorAll('li').forEach(function(item, i){
+      var key = 'awrl-check:' + location.pathname + ':' + li + ':' + i;
+      if(localStorage.getItem(key) === '1'){ item.classList.add('checked'); }
+      item.addEventListener('click', function(){
+        item.classList.toggle('checked');
+        localStorage.setItem(key, item.classList.contains('checked') ? '1' : '0');
+      });
+    });
+  });
 </script>
 </body>
 </html>
