@@ -52,6 +52,15 @@ Curated, high-trust sources grounding the teaching. Explainers draw knowledge fr
 - [Keep a Changelog](https://keepachangelog.com/) · [Semantic Versioning](https://semver.org/)
   Conventions for recording change and versioning. Use for: later phases when the project has releasable surface; noted now so the habit is on the radar.
 
+## Knowledge — Simulation Architecture & Data Layout
+
+- [NumPy — Structured arrays](https://numpy.org/doc/stable/user/basics.rec.html) · [The NumPy array: a structure for efficient numerical computation (van der Walt et al.)](https://arxiv.org/pdf/1102.1523)
+  The record-array facility and the paper on why contiguous, typed arrays vectorize. Use for: deciding how to lay out the ant state (and *not* to reach for a structured/record array where a Struct-of-Arrays is faster).
+- [Hans Dembinski — Array of structs vs struct of arrays (with a NumPy/Numba benchmark)](https://hdembinski.github.io/posts/struct_of_arrays_vs_arrays_of_structs.html)
+  Concrete measurement (up to ~40× on a particle sim) of why SoA beats AoS for data-parallel updates. Use for: grounding the Struct-of-Arrays decision for the ant store — parallel numpy columns, not a list of `Ant` objects.
+- [Building a Data-Oriented Entity System (bitsquid / Niklas Frykholm)](http://bitsquid.blogspot.com/2014/08/building-data-oriented-entity-system.html) · [Entity Component System — Wikipedia](https://en.wikipedia.org/wiki/Entity_component_system)
+  The stable-handle / generational-index pattern: an entity ID is *not* its array row; births and deaths recycle rows, so identity needs its own id → row indirection. Use for: stable per-ant IDs that survive death/rebirth for the event log and renderer.
+
 ## Knowledge — Ant Biology (the science we honour)
 
 - [Deborah M. Gordon, *Ant Encounters: Interaction Networks and Colony Behavior* (Princeton)](https://press.princeton.edu/books/paperback/9780691138794/ant-encounters)

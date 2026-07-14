@@ -16,12 +16,12 @@ Legend: ⬜ not started · 🟦 in progress · ✅ done
 - ✅ **0.3 — Config spine**: Hydra composition + Pydantic validation; a `Config` object loaded from YAML with a CLI override.
 - ✅ **0.4 — Test + CI harness**: `pytest` layout, first `hypothesis` test, GitHub Actions running lint/type/test.
 - ✅ **0.5 — Logging**: stdlib `logging` + `structlog` (JSON) + `rich` console, level driven by config.
-- 🟦 **0.6 — Docs that lead the code**: *formalize* the seeded `CLAUDE.md` with the conventions established across 0.1–0.5, and write a lean, honestly-labelled `README.md` (vision + status banner + roadmap pointer). *CLAUDE.md seeded at repo root already; ARCHITECTURE.md intentionally deferred to end of Phase 1.*
+- ✅ **0.6 — Docs that lead the code**: *formalize* the seeded `CLAUDE.md` with the conventions established across 0.1–0.5, and write a lean, honestly-labelled `README.md` (vision + status banner + roadmap pointer). *CLAUDE.md seeded at repo root already; ARCHITECTURE.md intentionally deferred to end of Phase 1.*
 
 ## Phase 1 — Core simulation (headless, NO RL)
 *Goal: a correct, seeded, serializable world with scripted ants. Learn clean sim design, numpy vectorization, invariant testing.*
 
-- ⬜ **1.1 — Grid & entities**: world grid, ant/food/nest entities, stable per-ant IDs, injected seeded RNG.
+- 🟦 **1.1 — Grid & entities**: world grid, ant/food/nest entities, stable per-ant IDs, injected seeded RNG.
 - ⬜ **1.2 — Movement & occupancy**: 8-dir moves, per-cell occupancy caps, collisions/jostling.
 - ⬜ **1.3 — Energy & metabolism**: per-ant energy, consumption, death; conservation bookkeeping.
 - ⬜ **1.4 — Pheromone field**: 5-channel deposit / evaporate / diffuse math (the stigmergy substrate); non-negativity + decay invariants.

@@ -1,9 +1,17 @@
 # CLAUDE.md — AntWorks-RL
 
-Guidance for Claude working in this repository. This is a **living document**: it is seeded early and formalized in Lesson 0.6. Keep it honest — document conventions the code actually follows, not aspirations.
+Guidance for Claude working in this repository.
+
+This is a living document: seeded early and formalized in Lesson 0.6. Keep it honest. Document conventions the code actually follows today, and label planned work as vision/roadmap.
 
 ## What this project is
-AntWorks-RL is a biologically-grounded, multi-agent RL ant-colony simulation where ant behaviour is **learned** (not scripted) and colony intelligence **emerges** from learned stigmergy. See `learning/learning-records/0002-locked-design-decisions.md` for the full locked design and `learning/ROADMAP.md` for current phase/lesson.
+AntWorks-RL is a biologically-grounded, multi-agent RL ant-colony simulation where ant behaviour is **learned** (not scripted) and colony intelligence emerges from learned stigmergy.
+
+Current status: Foundation (Phase 0) is complete; the full simulation starts in Phase 1.
+
+References:
+- `learning/learning-records/0002-locked-design-decisions.md` for locked design decisions.
+- `learning/ROADMAP.md` for current phase and lesson.
 
 ## ⚠️ Teaching mode — the most important rule
 This is a **learning project**. The user writes ALL project code themselves, one lesson at a time, via the `/teach` loop in `learning/`.
@@ -22,12 +30,17 @@ This is a **learning project**. The user writes ALL project code themselves, one
 - **Logging**: stdlib `logging` + `structlog` (JSON in prod) + `rich` (dev). **Metrics/experiments**: Weights & Biases (behind a logger interface; TensorBoard fallback).
 - **Persistence**: `SQLite` via a repository layer (SQLModel) for persistent-mode history + per-ant event log.
 
-## Conventions (grow this list through Phase 0; formalize in 0.6)
-- **src-layout**: code in `src/antworks_rl/`; tests exercise the installed package.
-- **Reproducibility**: every stochastic component draws from an **injected, seeded RNG**; the seed comes from config. No global `random`/`np.random`.
-- **Sim/render decoupling**: the simulation is headless; it emits a serializable `StateSnapshot` that renderers consume. Never couple sim logic to a renderer.
-- **Episode boundaries live in the runner/wrapper, not the sim core** (enables persistent mode).
-- **Docs track reality**: never document unimplemented features as if they exist; intent goes in clearly-labelled vision/roadmap sections only.
+CI fact (must remain true): `ty` is blocking in CI, not advisory. See `.github/workflows/ci.yaml`.
+
+## Conventions (formalized in Lesson 0.6)
+- **Docs track reality**: describe what exists today; clearly label vision/future work.
+- **Package and layout**: project package name is `antworks_rl`; source code lives in `src/antworks_rl/`; tests target the installed package API, not ad-hoc path hacks.
+- **Toolchain and quality gates**: use `uv` for env/deps/commands, `ruff` for lint and format, and `ty` for type checking; in CI, lint, format-check, type-check, and tests all run and are required to pass.
+- **Config spine**: Hydra composes configuration from `src/conf/`; Pydantic validates the composed config object; config groups are first-class (for example `logging=debug`); Hydra relative `config_path` behavior is module-relative and depends on `conf/__init__.py` existing.
+- **Reproducibility**: all stochastic behavior must use injected, seeded RNG instances; do not use global `random` or global `np.random` state.
+- **Logging**: logging is structured and config-driven (renderer/level selected by config); event names plus key-value fields are preferred over free-form log text; Hydra owns root logging setup, so application logging setup should force handler configuration to avoid collisions.
+- **Test layout**: test modules stay flat under `tests/` with unique basenames; avoid nested test packages that can shadow stdlib names (for example `logging`) or create import-mismatch collisions.
+- **Forward-looking sim conventions (for Phase 1+)**: sim/render decoupling (headless sim, serializable snapshots for renderers); episode boundaries belong in wrappers/runners, not the sim core.
 
 ## Where things live
 - `learning/` — the teaching workspace (MISSION, ROADMAP, GLOSSARY, RESOURCES, learning-records, explainers). Terminology follows `learning/GLOSSARY.md`.
