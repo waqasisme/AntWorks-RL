@@ -1,0 +1,5 @@
+width: 10
+height: 10
+n_ants: 5
+n_food: 3
+occupancy_cap: 2

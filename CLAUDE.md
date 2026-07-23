@@ -30,8 +30,6 @@ This is a **learning project**. The user writes ALL project code themselves, one
 - **Logging**: stdlib `logging` + `structlog` (JSON in prod) + `rich` (dev). **Metrics/experiments**: Weights & Biases (behind a logger interface; TensorBoard fallback).
 - **Persistence**: `SQLite` via a repository layer (SQLModel) for persistent-mode history + per-ant event log.
 
-CI fact (must remain true): `ty` is blocking in CI, not advisory. See `.github/workflows/ci.yaml`.
-
 ## Conventions (formalized in Lesson 0.6)
 - **Docs track reality**: describe what exists today; clearly label vision/future work.
 - **Package and layout**: project package name is `antworks_rl`; source code lives in `src/antworks_rl/`; tests target the installed package API, not ad-hoc path hacks.

@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 1.1b — Property-based testing with Hypothesis</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --ink:#e8e9ec; --muted:#9aa1ad;
+    --line:#2a2f3a; --accent:#e8a33d; --accent2:#6cc17a; --bad:#e06c75; --code:#0b0d11;
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f6f6f4; --panel:#fff; --panel2:#f0f1ee; --ink:#1c1e24; --muted:#5c636f;
+      --line:#e2e3df; --accent:#c9821f; --accent2:#3f9e57; --code:#f2f3ef; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:820px;margin:0 auto;padding:48px 22px 96px;}
+  .kicker{color:var(--accent);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12.5px}
+  h1{font-size:34px;line-height:1.15;margin:.35em 0 .1em;letter-spacing:-.02em}
+  h2{font-size:23px;margin:2.1em 0 .5em;letter-spacing:-.01em;border-bottom:1px solid var(--line);padding-bottom:.35em}
+  h3{font-size:17px;margin:1.5em 0 .3em}
+  p{color:var(--ink)} .muted{color:var(--muted)}
+  .lead{font-size:18px;color:var(--muted)}
+  a{color:var(--accent)}
+  code{background:var(--code);padding:.12em .4em;border-radius:6px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
+  pre{background:var(--code);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;overflow-x:auto}
+  pre code{background:none;padding:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:18px 0}
+  .why{border-left:3px solid var(--accent)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:620px){.grid{grid-template-columns:1fr}}
+  .tool{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .tool b{color:var(--accent)}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--accent);font-size:12.5px;letter-spacing:.04em;text-transform:uppercase}
+  td code{font-size:.85em}
+  .tag{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+    border-radius:999px;padding:2px 10px;font-size:12px;margin:2px 4px 2px 0}
+  .quiz{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:16px 0}
+  .q{font-weight:600;margin-bottom:10px}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin:7px 0;cursor:pointer;
+    font:inherit;transition:.12s}
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{border-color:var(--accent2);background:color-mix(in srgb,var(--accent2) 16%,var(--panel2))}
+  .opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--panel2))}
+  .fb{margin-top:10px;font-size:14.5px;color:var(--muted);display:none}
+  .fb.show{display:block}
+  .checklist{list-style:none;padding:0}
+  .checklist li{padding:8px 0 8px 30px;position:relative;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;transition:color .15s}
+  .checklist li:before{content:"▢";position:absolute;left:4px;color:var(--accent);font-size:15px}
+  .checklist li:hover{color:var(--accent)}
+  .checklist li.checked:before{content:"▣";color:var(--accent2)}
+  .checklist li.checked{color:var(--muted)}
+  .pill{font-size:12px;color:var(--bg);background:var(--accent);border-radius:999px;padding:2px 10px;font-weight:700}
+  footer{margin-top:40px;color:var(--muted);font-size:14px}
+  .ref{border-left:3px solid var(--accent2);background:var(--panel);border-radius:0 12px 12px 0}
+  .dom{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2);font-weight:700}
+  .warn{border-left:3px solid var(--bad)}
+  .good{border-left:3px solid var(--accent2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">AntWorks-RL · Phase 1 · Lesson 1.1b · companion</div>
+  <h1>Property-based testing with Hypothesis</h1>
+  <p class="lead"><a href="lesson-1.1-grid-and-entities.html">Lesson 1.1</a> ends with two tests, and one of them is not like the others. The determinism test is ordinary pytest. The <i>invariant</i> test asks for something new: "over randomized valid configs, ant ids are unique, all positions are in-bounds, no cell exceeds the cap." That word — <b>over randomized configs</b> — is Hypothesis. This companion teaches the mental shift from "test one example" to "state a property and let the machine attack it," then walks you right up to the edge of writing <code>test_world.py</code> yourself.</p>
+
+  <div class="card why">
+    <b>Why this now?</b> Your <code>make_world</code> has invariants that are <i>true by construction</i> — the slot draw <i>can't</i> exceed the cap, `check_ants_fit` <i>can't</i> let an impossible config through. When you believe code is correct by construction, an example test is nearly worthless: you'll pick the example that confirms your belief. Property-based testing does the opposite — it hunts for the input that breaks your belief, and when it finds one it hands you the <i>smallest</i> one. Two lessons ago, the 3-D-unravel bug was exactly this shape: invisible to a hand-picked example, obvious to a strategy that tries a 4×4 grid with a cap. This is the tool that would have caught it on example one.
+  </div>
+
+  <h2>1 · Two ways to test the same function</h2>
+  <p>An <b>example-based</b> test asserts a fact about one input you chose:</p>
+<pre><code>def test_make_world_places_all_ants():
+    cfg = WorldConfig(width=6, height=6, n_ants=4, n_food=3, occupancy_cap=2)
+    world = make_world(cfg, np.random.default_rng(0))
+    assert len(world.ant_ids) == 4        # true for THIS config</code></pre>
+  <p>It passes. But you proved one point in a vast input space, and you chose the point. A <b>property-based</b> test asserts a fact that must hold for <i>every</i> input in a space you describe — and lets Hypothesis pick the points, adversarially:</p>
+<pre><code>from hypothesis import given, strategies as st
+
+@given(n_ants=st.integers(min_value=1, max_value=500))
+def test_all_ants_get_ids(n_ants):
+    cfg = WorldConfig(width=100, height=100, n_ants=n_ants, n_food=0, occupancy_cap=3)
+    world = make_world(cfg, np.random.default_rng(0))
+    assert len(world.ant_ids) == n_ants   # true for ALL n_ants in range</code></pre>
+  <p>The shift is from <i>"does it work for 4?"</i> to <i>"what is always true, and for which inputs?"</i> You stop writing answers and start writing <b>invariants</b> — statements of the form "no matter the valid config, X holds." That reframing is the whole skill; the library is just the engine that runs it.</p>
+
+  <div class="card good">
+    <b>The invariant-spotting habit.</b> Good properties are usually one of a few shapes. Learn to reach for them:
+    <ul style="margin:.5em 0 0">
+      <li><b>Never-exceeds / bounds</b> — "no cell holds more than <code>occupancy_cap</code>", "every position is inside the grid." Yours are mostly these.</li>
+      <li><b>Conservation / counts</b> — "exactly <code>n_food</code> cells hold food", "<code>len(ant_ids) == n_ants</code>." The thing you put in equals the thing you get out.</li>
+      <li><b>Uniqueness</b> — "no two ants share an id."</li>
+      <li><b>Round-trip</b> — "serialize then deserialize returns an equal object." (You'll want this when <code>StateSnapshot</code> lands in 1.6.)</li>
+    </ul>
+  </div>
+
+  <h2>2 · The three pieces</h2>
+  <p>Every Hypothesis test is the same three parts. Name them and the syntax stops being magic:</p>
+  <div class="grid">
+    <div class="tool"><b>1 · <code>@given(...)</code></b><br><span class="muted">The decorator that turns one test function into hundreds of runs. Each keyword maps a parameter to a <i>strategy</i>. Hypothesis calls your function many times with drawn values (100 by default).</span></div>
+    <div class="tool"><b>2 · a strategy</b><br><span class="muted">A recipe for generating (and <i>shrinking</i>) values. <code>st.integers()</code>, <code>st.floats()</code>, <code>st.lists(...)</code>, <code>st.booleans()</code>. Strategies compose — that's the power.</span></div>
+    <div class="tool"><b>3 · the assertion</b><br><span class="muted">The property, as a plain <code>assert</code>. If it ever fails for any drawn value, Hypothesis reports the failure — after shrinking it to the minimal case.</span></div>
+  </div>
+  <p>The <code>rng</code> is worth a beat. Your <code>make_world</code> takes an injected <code>np.random.Generator</code> — so the <i>config</i> is what Hypothesis should vary, and the seed can stay fixed inside the test. You're testing "for all valid configs, the invariants hold," not "for all RNG streams." (You can vary the seed too with <code>st.integers()</code> for the seed — a nice belt-and-braces, but not required.)</p>
+
+  <h2>3 · Strategies, and the one that matters here: <code>@composite</code></h2>
+  <p>Simple strategies are drawn independently. That breaks the moment your inputs have a <b>relationship</b> — and yours do. Watch what goes wrong if you draw the five config fields independently:</p>
+<pre><code>@given(
+    width=st.integers(1, 20), height=st.integers(1, 20),
+    n_ants=st.integers(1, 10_000), occupancy_cap=st.integers(1, 8),
+)
+def test_bad(width, height, n_ants, occupancy_cap):
+    cfg = WorldConfig(...)   # ValidationError: n_ants exceeds max occupancy
+</code></pre>
+  <p>Most draws are <i>unsatisfiable</i> — a 2×2 grid with cap 1 holds 4 ants, but Hypothesis just drew <code>n_ants=9000</code>. Your own <code>check_ants_fit</code> rejects it, and the test dies on setup instead of testing anything. You need <code>n_ants</code> drawn <i>after</i>, and <i>from</i>, the grid dimensions. That's what <code>@composite</code> is for — a strategy that draws values in sequence, each depending on the last:</p>
+<pre><code>from hypothesis import strategies as st
+
+@st.composite
+def valid_world_configs(draw):
+    width  = draw(st.integers(min_value=1, max_value=20))
+    height = draw(st.integers(min_value=1, max_value=20))
+    cap    = draw(st.integers(min_value=1, max_value=8))
+    # now n_ants and n_food are drawn from a range the grid can actually satisfy
+    n_ants = draw(st.integers(min_value=1, max_value=width * height * cap))
+    n_food = draw(st.integers(min_value=0, max_value=width * height))
+    return WorldConfig(width=width, height=height,
+                       n_ants=n_ants, n_food=n_food, occupancy_cap=cap)
+
+@given(cfg=valid_world_configs())
+def test_world_invariants(cfg):
+    world = make_world(cfg, np.random.default_rng(0))
+    ...   # your assertions
+</code></pre>
+  <p>Read the shape, not the syntax: <code>draw(...)</code> pulls one value from an inner strategy, and because <code>n_ants</code>'s upper bound is <code>width*height*cap</code>, <b>every config this produces is satisfiable by construction.</b> No wasted examples, no setup crashes — the same "make the bad state unrepresentable" instinct you applied to occupancy, now applied to test inputs. This is the single most important Hypothesis technique for your project; almost every sim invariant test you write from here will start with a <code>@composite</code> config strategy.</p>
+
+  <div class="card warn">
+    <b>Prefer <code>max_value</code> over <code>.filter()</code>.</b> A tempting shortcut is to draw <code>n_ants</code> broadly and <code>.filter(lambda n: n &lt;= w*h*cap)</code>. Resist it. Filtering <i>discards</i> draws that fail the predicate, and near saturation it discards almost all of them — Hypothesis raises a <code>FailedHealthCheck</code> for filtering too much. Deriving the bound (as above) generates <i>only</i> valid values. Construct, don't reject — the same lesson as your ant placement.
+  </div>
+
+  <h2>4 · The payoff: shrinking</h2>
+  <p>Here's what makes Hypothesis worth learning over "just loop with <code>random</code>." When a property fails, it doesn't hand you the wild 17×13-cap-6 config that happened to trip it. It <b>shrinks</b>: re-runs the property against progressively simpler inputs, keeping only ones that still fail, until it finds the <i>minimal</i> counterexample — then prints that.</p>
+<pre><code>Falsifying example: test_world_invariants(
+    cfg=WorldConfig(width=1, height=1, n_ants=2, occupancy_cap=1, ...),
+)</code></pre>
+  <p>That's a debugging gift. Instead of "it broke somewhere in a 200-ant world," you get "it breaks with 2 ants on a 1×1 grid" — the smallest possible reproduction, which usually points straight at the cause. And Hypothesis <b>remembers</b> failures in a local <code>.hypothesis/</code> database, so the next run replays the known-bad example first. Fix the bug, the replay confirms it; a green run means the counterexample is genuinely gone.</p>
+  <div class="card why">
+    <b>Mental model:</b> example tests prove presence of behaviour for a point you trust; property tests attack a claim across a space you distrust, and shrink any breach to its core. You want both. Determinism is a fact about specific seeds → an <i>example</i> test. Invariants are claims about all configs → <i>property</i> tests.
+  </div>
+
+  <h2>5 · The three gotchas that bite NumPy users</h2>
+  <table>
+    <tr><th>Gotcha</th><th>What happens / what to do</th></tr>
+    <tr><td><code>deadline</code></td><td>Hypothesis fails a test that runs "too slow" (200 ms default per example) to catch perf cliffs. A large grid draw can trip this spuriously. Cap your dimensions small (≤20) so worlds are cheap, or set <code>@settings(deadline=None)</code> on the test.</td></tr>
+    <tr><td>Health checks</td><td><code>filter_too_much</code> / <code>data_too_large</code> fire when your strategy is wasteful. The fix is almost always to <i>derive</i> bounds (§3), not to suppress the check.</td></tr>
+    <tr><td>Determinism vs replay</td><td>Hypothesis varies its <i>own</i> examples run-to-run by design (it's exploring). That's separate from <i>your</i> seeded <code>rng</code>. Keep the sim seed fixed inside the test; let Hypothesis vary the config. If you need fully reproducible example selection in CI, <code>@settings(derandomize=True)</code>.</td></tr>
+  </table>
+  <p><code>@settings</code> stacks above <code>@given</code>:</p>
+<pre><code>from hypothesis import given, settings
+
+@settings(max_examples=200, deadline=None)
+@given(cfg=valid_world_configs())
+def test_world_invariants(cfg):
+    ...
+</code></pre>
+
+  <h2>6 · Mapping it onto your 1.1 deliverables</h2>
+  <p>The exercise names two tests. Here's which tool each wants and why:</p>
+  <table>
+    <tr><th>Deliverable</th><th>Tool</th><th>Why</th></tr>
+    <tr><td>Same seed ⇒ identical worlds; different seeds differ</td><td>plain <code>pytest</code></td><td>A claim about <i>specific seeds</i>, not a space. Build twice, compare. Use your <code>__eq__</code> — and <b>also</b> assert <code>np.array_equal(a.ant_ids, b.ant_ids)</code>, because <code>__eq__</code> doesn't check ids.</td></tr>
+    <tr><td>Ids unique · positions in-bounds · no cell over cap · counts match</td><td><b>Hypothesis</b></td><td>Claims about <i>all valid configs</i>. One <code>@composite</code> strategy + one test with four asserts.</td></tr>
+    <tr><td>Impossible config raises</td><td>plain <code>pytest</code></td><td><code>pytest.raises(ValidationError)</code> on an <code>n_ants &gt; w·h·cap</code> config. One specific bad input.</td></tr>
+  </table>
+  <p>For the "no cell over cap" assert, the vectorized check is worth knowing: flatten each position to a cell index and <code>np.bincount</code> it — the max count is the fullest cell.</p>
+<pre><code># positions (n,2) -> per-cell occupancy, without a Python loop
+flat = world.ant_positions[:, 0] * world.height + world.ant_positions[:, 1]
+counts = np.bincount(flat, minlength=world.width * world.height)
+assert counts.max() &lt;= world.occupancy_cap</code></pre>
+
+  <h2>7 · Check yourself</h2>
+
+  <div class="quiz" data-correct="b">
+    <div class="q">Q1. Why draw <code>n_ants</code> with <code>max_value=width*height*cap</code> inside a <code>@composite</code>, instead of drawing it independently and filtering?</div>
+    <button class="opt" data-k="a">a) Filtering is slower per example but otherwise identical in behaviour.</button>
+    <button class="opt" data-k="b">b) Independent draw + filter discards most examples near saturation and trips <code>FailedHealthCheck</code>; deriving the bound generates only satisfiable configs, so nothing is wasted.</button>
+    <button class="opt" data-k="c">c) Hypothesis can't generate integers above 10,000 without a composite.</button>
+    <div class="fb" data-k="a">It's not just speed — filtering too much makes Hypothesis abort the test with a health check, and you also lose coverage of the interesting saturated configs.</div>
+    <div class="fb" data-k="b">Right — derive the bound so every generated config is valid by construction. Same "make bad states unrepresentable" move as the ant placement.</div>
+    <div class="fb" data-k="c">No such limit — <code>st.integers()</code> is unbounded by default. The issue is the <i>relationship</i> between fields, not a ceiling.</div>
+  </div>
+
+  <div class="quiz" data-correct="c">
+    <div class="q">Q2. A property test fails. What does Hypothesis give you that a hand-rolled random loop doesn't?</div>
+    <button class="opt" data-k="a">a) A proof that the property holds for all other inputs.</button>
+    <button class="opt" data-k="b">b) A guarantee the same random inputs are used every run.</button>
+    <button class="opt" data-k="c">c) The <i>minimal</i> failing input (shrinking) plus a saved replay of it in <code>.hypothesis/</code> for the next run.</button>
+    <div class="fb" data-k="a">No — a passing property test is strong evidence, never a proof. It samples the space; it doesn't exhaust it.</div>
+    <div class="fb" data-k="b">The opposite — Hypothesis deliberately varies examples to explore. It's your <i>sim</i> seed that stays fixed, not Hypothesis's search.</div>
+    <div class="fb" data-k="c">Exactly — shrinking hands you the smallest reproduction, and the database replays it until you've fixed it.</div>
+  </div>
+
+  <div class="quiz" data-correct="a">
+    <div class="q">Q3. Which of your 1.1 tests should <i>not</i> be a Hypothesis test?</div>
+    <button class="opt" data-k="a">a) "Same seed produces identical worlds" — it's a claim about specific seeds, so plain pytest fits; Hypothesis adds nothing.</button>
+    <button class="opt" data-k="b">b) "No cell exceeds the cap" — determinism means it only needs one example.</button>
+    <button class="opt" data-k="c">c) "Ant ids are unique" — uniqueness can't be expressed as a property.</button>
+    <div class="fb" data-k="a">Right — determinism is an example-shaped claim (build twice, compare). Save Hypothesis for the "for all valid configs" invariants.</div>
+    <div class="fb" data-k="b">Cap-respect must hold across <i>all</i> configs — that's the textbook property test. Determinism is the example one.</div>
+    <div class="fb" data-k="c">Uniqueness is a classic property (<code>len(set(ids)) == len(ids)</code>) — very much expressible.</div>
+  </div>
+
+  <h2>8 · Your exercise — <code>tests/test_world.py</code> <span class="pill">the real deliverable</span></h2>
+  <p>This is the 1.1 test file, now with the tool to write it. Home: <code>tests/test_world.py</code> (flat under <code>tests/</code>, unique basename — the layout convention from 0.4). Build it up in this order:</p>
+  <ul class="checklist">
+    <li><b>Determinism (pytest).</b> Two worlds, same seed → assert <code>a == b</code> <i>and</i> <code>np.array_equal(a.ant_ids, b.ant_ids)</code>. A third world, different seed → assert <code>a != b</code>. (Use a small grid so different seeds reliably diverge.)</li>
+    <li><b>The strategy.</b> Write a <code>@st.composite</code> <code>valid_world_configs(draw)</code> that draws <code>width, height, cap</code> first, then <code>n_ants ∈ [1, w·h·cap]</code> and <code>n_food ∈ [0, w·h]</code>. Return a <code>WorldConfig</code>.</li>
+    <li><b>Invariants (Hypothesis).</b> One <code>@given(cfg=valid_world_configs())</code> test asserting: ids unique (<code>len(set(...)) == n_ants</code>); every position in-bounds; per-cell occupancy ≤ cap (the <code>bincount</code> trick); <code>food.sum() == n_food</code>; <code>len(ant_ids) == n_ants</code>.</li>
+    <li><b>Edges as their own cases.</b> Full saturation <code>n_ants == w·h·cap</code> (the draw must still succeed); <code>n_ants == 1</code>; <code>n_food == 0</code>.</li>
+    <li><b>The rejection case.</b> <code>with pytest.raises(ValidationError): WorldConfig(width=2, height=2, n_ants=99, occupancy_cap=1, ...)</code>. Import it from <code>pydantic</code>.</li>
+    <li><b>Green gates.</b> <code>uv run ruff check .</code>, <code>uv run ty check .</code>, <code>uv run pytest</code> — all pass. Watch the run count jump: one <code>@given</code> test is hundreds of cases.</li>
+  </ul>
+  <div class="card why">
+    <b>Then say "check now."</b> I'll review the strategy first — is every generated config satisfiable, or are you leaning on <code>.filter()</code>? — then the assertions, then whether the edges are real cases or hand-waved. If an invariant is genuinely true-by-construction, I may suggest <i>temporarily breaking</i> <code>make_world</code> to watch the test go red — a property test you've never seen fail is a property test you don't yet trust.
+  </div>
+
+  <h2>9 · Deep-dive references</h2>
+  <div class="card ref"><span class="dom">Primary source · Hypothesis</span><br><a href="https://hypothesis.readthedocs.io/en/latest/quickstart.html">Hypothesis — Quickstart &amp; <code>@given</code></a><br><span class="muted">The canonical intro. Read <code>@given</code>, the settings page (<code>deadline</code>, <code>max_examples</code>, <code>derandomize</code>), and the database section that explains failure replay.</span></div>
+  <div class="card ref"><span class="dom">Technique · Hypothesis</span><br><a href="https://hypothesis.readthedocs.io/en/latest/data.html#composite-strategies"><code>@composite</code> and building strategies</a><br><span class="muted">Backs §3 — the exact pattern for dependent draws you need for satisfiable configs. Also covers <code>st.builds</code>, which can construct your <code>WorldConfig</code> directly once the fields are independent enough.</span></div>
+  <div class="card ref"><span class="dom">Depth · NumPy integration</span><br><a href="https://hypothesis.readthedocs.io/en/latest/numpy.html">Hypothesis for NumPy — <code>arrays()</code>, shapes, dtypes</a><br><span class="muted">Not needed for 1.1 (you generate a <i>config</i>, not raw arrays), but it's where you'll go in 1.2+ when you want to feed <code>make_world</code>'s <i>output</i> arrays into movement tests.</span></div>
+  <div class="card ref"><span class="dom">Concept · why it works</span><br><a href="https://hypothesis.works/articles/what-is-property-based-testing/">Hypothesis.works — "What is property-based testing?"</a><br><span class="muted">The philosophy behind §1 and §4: the invariant mindset and why shrinking is the feature that makes it practical rather than academic.</span></div>
+
+  <div class="card">
+    <b>Ask me anything.</b> If the example-vs-property split, the <code>@composite</code> draw order, or the "why not filter" point is fuzzy, ask in the chat <i>before</i> you write the file. The strategy is the part people get subtly wrong — cheaper to check the shape now than to debug a health-check failure later.
+  </div>
+
+  <footer>
+    AntWorks-RL · Lesson 1.1b (companion to <a href="lesson-1.1-grid-and-entities.html">1.1</a>) · saved to <code>learning/explainers/</code> — reopen anytime.<br>
+    Terminology follows <code>learning/GLOSSARY.md</code>. Back to the main track: finish <b>1.1 — Grid &amp; entities</b> (write <code>test_world.py</code>), then <b>1.2 — Movement &amp; occupancy</b>.
+  </footer>
+</div>
+
+<script>
+  document.querySelectorAll('.quiz').forEach(function(quiz){
+    var correct = quiz.getAttribute('data-correct');
+    quiz.querySelectorAll('.opt').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var k = btn.getAttribute('data-k');
+        quiz.querySelectorAll('.opt').forEach(function(b){ b.classList.remove('correct','wrong'); });
+        quiz.querySelectorAll('.fb').forEach(function(f){ f.classList.remove('show'); });
+        btn.classList.add(k===correct ? 'correct' : 'wrong');
+        if(k!==correct){ quiz.querySelector('.opt[data-k="'+correct+'"]').classList.add('correct'); }
+        var fb = quiz.querySelector('.fb[data-k="'+k+'"]'); if(fb) fb.classList.add('show');
+      });
+    });
+  });
+  document.querySelectorAll('.checklist').forEach(function(list, li){
+    list.querySelectorAll('li').forEach(function(item, i){
+      var key = 'awrl-check:' + location.pathname + ':' + li + ':' + i;
+      if(localStorage.getItem(key) === '1'){ item.classList.add('checked'); }
+      item.addEventListener('click', function(){
+        item.classList.toggle('checked');
+        localStorage.setItem(key, item.classList.contains('checked') ? '1' : '0');
+      });
+    });
+  });
+</script>
+</body>
+</html>

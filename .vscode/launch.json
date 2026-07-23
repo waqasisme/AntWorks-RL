@@ -1,0 +1,94 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            // Runs the `antworks-rl` console script from pyproject [project.scripts],
+            // i.e. antworks_rl:main — the Hydra entrypoint.
+            "name": "antworks-rl",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/.venv/bin/antworks-rl",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "args": [],
+            "env": {
+                // Hydra swallows tracebacks by default; this restores them.
+                "HYDRA_FULL_ERROR": "1"
+            }
+        },
+        {
+            // Same, with Hydra overrides. Edit "args" for whatever you're debugging.
+            "name": "antworks-rl (debug logging, test world)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/.venv/bin/antworks-rl",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "args": [
+                "logging=debug",
+                "world=test"
+            ],
+            "env": {
+                "HYDRA_FULL_ERROR": "1"
+            }
+        },
+        {
+            // Prompts for Hydra overrides on each launch (space-separated).
+            "name": "antworks-rl (prompt for overrides)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/.venv/bin/antworks-rl",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "args": "${command:pickArgs}",
+            "env": {
+                "HYDRA_FULL_ERROR": "1"
+            }
+        },
+        {
+            // Debug the whole suite. Breakpoints in tests and in src both work.
+            "name": "pytest: all tests",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "args": [
+                "-ra"
+            ]
+        },
+        {
+            // Debug just the test file that's currently open.
+            "name": "pytest: current file",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "args": [
+                "-ra",
+                "-s",
+                "${file}"
+            ]
+        },
+        {
+            // Scratch scripts only — this is what was here before, and it will not
+            // run the app (main lives in antworks_rl/__init__.py behind @hydra.main).
+            "name": "Python: current file",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal"
+        }
+    ]
+}

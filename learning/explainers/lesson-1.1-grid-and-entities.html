@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 1.1 — Grid &amp; entities</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --ink:#e8e9ec; --muted:#9aa1ad;
+    --line:#2a2f3a; --accent:#e8a33d; --accent2:#6cc17a; --bad:#e06c75; --code:#0b0d11;
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f6f6f4; --panel:#fff; --panel2:#f0f1ee; --ink:#1c1e24; --muted:#5c636f;
+      --line:#e2e3df; --accent:#c9821f; --accent2:#3f9e57; --code:#f2f3ef; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:820px;margin:0 auto;padding:48px 22px 96px;}
+  .kicker{color:var(--accent);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12.5px}
+  h1{font-size:34px;line-height:1.15;margin:.35em 0 .1em;letter-spacing:-.02em}
+  h2{font-size:23px;margin:2.1em 0 .5em;letter-spacing:-.01em;border-bottom:1px solid var(--line);padding-bottom:.35em}
+  h3{font-size:17px;margin:1.5em 0 .3em}
+  p{color:var(--ink)} .muted{color:var(--muted)}
+  .lead{font-size:18px;color:var(--muted)}
+  a{color:var(--accent)}
+  code{background:var(--code);padding:.12em .4em;border-radius:6px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
+  pre{background:var(--code);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;overflow-x:auto}
+  pre code{background:none;padding:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:18px 0}
+  .why{border-left:3px solid var(--accent)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:620px){.grid{grid-template-columns:1fr}}
+  .tool{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .tool b{color:var(--accent)}
+  .tag{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+    border-radius:999px;padding:2px 10px;font-size:12px;margin:2px 4px 2px 0}
+  .tree{font-family:"SF Mono",ui-monospace,Menlo,monospace;font-size:13.5px;line-height:1.7;color:var(--muted)}
+  .tree b{color:var(--ink)}
+  /* quiz */
+  .quiz{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:16px 0}
+  .q{font-weight:600;margin-bottom:10px}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin:7px 0;cursor:pointer;
+    font:inherit;transition:.12s}
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{border-color:var(--accent2);background:color-mix(in srgb,var(--accent2) 16%,var(--panel2))}
+  .opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--panel2))}
+  .fb{margin-top:10px;font-size:14.5px;color:var(--muted);display:none}
+  .fb.show{display:block}
+  .checklist{list-style:none;padding:0}
+  .checklist li{padding:8px 0 8px 30px;position:relative;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;transition:color .15s}
+  .checklist li:before{content:"▢";position:absolute;left:4px;color:var(--accent);font-size:15px}
+  .checklist li:hover{color:var(--accent)}
+  .checklist li.checked:before{content:"▣";color:var(--accent2)}
+  .checklist li.checked{color:var(--muted)}
+  .pill{font-size:12px;color:var(--bg);background:var(--accent);border-radius:999px;padding:2px 10px;font-weight:700}
+  footer{margin-top:40px;color:var(--muted);font-size:14px}
+  .ref{border-left:3px solid var(--accent2);background:var(--panel);border-radius:0 12px 12px 0}
+  .dom{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2);font-weight:700}
+  .warn{border-left:3px solid var(--bad)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">AntWorks-RL · Phase 1 · Lesson 1.1</div>
+  <h1>Grid &amp; entities</h1>
+  <p class="lead">Phase 0 gave you a typed, tested, config-driven, logging-wired skeleton. Now the simulation begins. This lesson builds the <b>world's data model</b> — the grid, the ants, the food, the nest — and the two decisions that will quietly govern everything downstream: <b>how ant state is laid out in memory</b>, and <b>how an ant keeps its identity when its array row does not</b>. No movement yet, no pheromones, no energy — just a correct, seeded, headless world at <code>t = 0</code>.</p>
+
+  <div class="card why">
+    <b>Why this lesson now?</b> Everything in Phase 1 — movement, occupancy, energy, the 5-channel pheromone field, the <code>StateSnapshot</code> — reads and writes <i>this</i> data structure. Get the layout right and the vectorized updates in 1.2–1.4 are a few lines of NumPy; get it wrong (a list of <code>Ant</code> objects) and you rewrite the core the moment you scale past a few dozen ants. The MISSION is emergent foraging from <i>thousands</i> of learned agents — the data model is where that scale is won or lost, and it is far cheaper to decide now than to retrofit later.
+  </div>
+
+  <h2>1 · The world is sim state, not a picture</h2>
+  <p>Our locked design (<code>learning-records/0002</code>) is a <b>grid world</b>: a 2-D lattice, ants take 8-directional moves + stay, cells have <b>occupancy caps</b>. The realism budget goes into pheromone chemistry and behaviour later — <i>not</i> locomotion physics. So the world at this stage is deliberately small: a grid size, a nest, some food, some ants with positions.</p>
+  <p>Hold two conventions from day one, because they are painful to add back later:</p>
+  <div class="grid">
+    <div class="tool"><b>Headless &amp; serializable</b><br><span class="muted">The world is plain data (NumPy arrays + scalars). It knows nothing about pygame, colours, or the screen. A renderer will later consume a <code>StateSnapshot</code> derived from it (Lesson 1.6) — never the reverse.</span></div>
+    <div class="tool"><b>Seeded &amp; injected RNG</b><br><span class="muted">Every random choice — nest placement, food scatter, ant spawn — draws from an injected <code>np.random.Generator</code> (your <code>make_rng</code> from 0.x), seeded from config. No global <code>np.random</code>. Same seed ⇒ byte-identical world.</span></div>
+  </div>
+
+  <h2>2 · The layout decision: Struct-of-Arrays</h2>
+  <p>The instinct from OO Python is a class per ant:</p>
+<pre><code>class Ant:            # ← the tempting, wrong-for-us choice
+    def __init__(self, id, x, y):
+        self.id = id; self.x = x; self.y = y
+ants = [Ant(...) for _ in range(n)]   # Array-of-Structs (AoS)</code></pre>
+  <p>This is <b>Array-of-Structs</b>: each ant's fields sit together, and the colony is a Python list of objects. It reads nicely and vectorizes terribly. To move every ant you iterate in Python and chase pointers all over the heap.</p>
+  <p>The alternative is <b>Struct-of-Arrays (SoA)</b>: one contiguous array <i>per field</i>, indexed by row.</p>
+<pre><code>pos   = np.zeros((n, 2), dtype=np.int32)   # column: x, y  for every ant
+ids   = np.zeros(n,       dtype=np.int64)   # stable identity per row
+alive = np.ones(n,        dtype=bool)       # is this row a live ant?</code></pre>
+  <p>Now "move all live ants north" is <code>pos[alive, 1] -= 1</code> — one vectorized NumPy op over contiguous memory, no Python loop. This is the <b>data-oriented</b> choice: lay out memory for the access pattern (update one field across all entities), not for human mental models. On a particle sim of exactly this shape, SoA measured up to <b>~40×</b> faster than AoS (Dembinski). For a colony you want to scale to thousands, that is the difference between real-time and a slideshow.</p>
+  <div class="card warn">
+    <b>Don't reach for <code>numpy</code> structured (record) arrays</b> either — <code>np.zeros(n, dtype=[('x',int),('y',int)])</code> looks like the best of both, but it lays out memory as AoS again (fields of one ant interleaved), so it loses the cache/SIMD win. Plain parallel arrays (or a small dataclass <i>holding</i> those arrays) is the deep-module move: a simple interface over a layout chosen for speed.</p>
+  </div>
+
+  <h2>3 · Identity ≠ row index</h2>
+  <p>Here is the subtle one. In 1.3 ants will die, and in later phases they'll be born mid-episode. If ant identity <i>is</i> its row index, then compacting the arrays (or reusing a dead row for a newborn) silently gives a new ant an old ant's identity — and your per-ant event log, your narrative hooks, and your renderer's "follow that ant" all corrupt.</p>
+  <p>So identity gets its <b>own</b> field, independent of storage position:</p>
+  <ul>
+    <li>A <b>monotonic counter</b> mints a fresh <code>id</code> for every ant ever created; it never rewinds. Row 4 today and row 4 after a death-compaction are different ants with different ids.</li>
+    <li>Lookups go through an <b>id → row</b> indirection (a dict, or a search) so external references are by id, internal vectorized work is by row.</li>
+  </ul>
+  <p>This is exactly the game-engine <b>entity-handle</b> pattern (bitsquid / ECS): the row is <i>where the data lives right now</i>; the id is <i>who this is, forever</i>. You don't need generational bit-packing yet — a plain growing counter is enough for 1.1 — but keep the two concepts separate from the first line of code.</p>
+
+  <h2>4 · Occupancy: a rule, enforced at construction</h2>
+  <p>Cells have an occupancy cap (design decision 0002). Movement enforcement is Lesson 1.2's job — but even at <code>t = 0</code> your <i>placement</i> must respect it: don't spawn 10 ants and the nest on the same cell if the cap is 4. Placement becomes "draw candidate cells from the injected RNG, reject ones already full." Getting this invariant true at construction is what your tests will pin down.</p>
+  <p class="muted">Keep scope tight: <b>no movement, no energy, no pheromone field, no stepping the world.</b> Those are 1.2–1.4. Lesson 1.1 is the static, seeded world at time zero and the invariants that must hold there.</p>
+
+  <h2>5 · Check yourself</h2>
+  <p class="muted">Immediate feedback — click an answer.</p>
+
+  <div class="quiz" data-correct="b">
+    <div class="q">Q1. Why store the colony as parallel NumPy arrays (Struct-of-Arrays) instead of a Python list of <code>Ant</code> objects?</div>
+    <button class="opt" data-k="a">a) It uses less code — one array is shorter than a class.</button>
+    <button class="opt" data-k="b">b) Per-field contiguous arrays let each per-step update run as one vectorized NumPy op over cache-friendly memory, which scales to thousands of ants; a list-of-objects forces a Python loop chasing heap pointers.</button>
+    <button class="opt" data-k="c">c) NumPy arrays are the only structure that can be serialized later.</button>
+    <div class="fb" data-k="a">Terser isn't the reason (and it often isn't terser). The reason is memory layout and vectorization at scale.</div>
+    <div class="fb" data-k="b">Exactly — SoA matches the access pattern "update one field across all entities," giving cache locality + SIMD. That's why it measured up to ~40× on a comparable particle sim.</div>
+    <div class="fb" data-k="c">You could serialize a list of objects too. Serialization isn't the driver — vectorized update performance is.</div>
+  </div>
+
+  <div class="quiz" data-correct="c">
+    <div class="q">Q2. Ants will die and rows will be recycled for newborns later. Why must an ant's <b>identity</b> be a separate field, not its array row index?</div>
+    <button class="opt" data-k="a">a) It doesn't matter; the row index is a perfectly stable identity.</button>
+    <button class="opt" data-k="b">b) Because NumPy forbids using integer indices as keys.</button>
+    <button class="opt" data-k="c">c) Because compacting the arrays or reusing a dead ant's row would hand a newborn an old ant's identity — corrupting the per-ant event log, narrative hooks, and any "follow this ant" in the renderer.</button>
+    <div class="fb" data-k="a">Row index is stable only while nothing is born or removed — which stops being true in 1.3. Then index ≠ identity.</div>
+    <div class="fb" data-k="b">No such rule. The problem is semantic: rows get reused, identities must not.</div>
+    <div class="fb" data-k="c">Right — a monotonic id + an id→row indirection keeps "who" separate from "where the data currently lives." Classic entity-handle pattern.</div>
+  </div>
+
+  <div class="quiz" data-correct="a">
+    <div class="q">Q3. Where should the randomness for nest/food/ant placement come from?</div>
+    <button class="opt" data-k="a">a) An <code>np.random.Generator</code> injected into the constructor, seeded from config — so the same seed reproduces the exact same world.</button>
+    <button class="opt" data-k="b">b) <code>np.random.randint(...)</code> using NumPy's global state — simplest to call.</button>
+    <button class="opt" data-k="c">c) Python's <code>random</code> module, seeded once at import time.</button>
+    <div class="fb" data-k="a">Yes — injected, seeded, per the locked reproducibility convention. Determinism is a testable property, not a hope.</div>
+    <div class="fb" data-k="b">Global <code>np.random</code> is exactly what the project bans: it's a hidden singleton, so runs aren't reproducible or independently seedable.</div>
+    <div class="fb" data-k="c">Also global, also banned — and mixing RNGs makes reproducibility even harder to reason about.</div>
+  </div>
+
+  <h2>6 · Your exercise <span class="pill">you code this</span></h2>
+  <p>Build the static, seeded world at <code>t = 0</code>. Suggested home: a new <code>src/antworks_rl/world.py</code> (a plain dataclass holding NumPy arrays is fine — you decide the exact shape; the acceptance criteria are about <i>behaviour</i>, not naming). End-state:</p>
+  <ul class="checklist">
+    <li>A <b>config group</b> for the world (extend the existing Hydra/Pydantic spine — e.g. a <code>world</code> group validated by a Pydantic model): grid <code>width</code>/<code>height</code>, <code>n_ants</code>, <code>n_food</code>, and the per-cell <code>occupancy_cap</code>. Overridable on the CLI like <code>logging=debug</code> already is.</li>
+    <li>A <b>world data structure</b> laid out <b>Struct-of-Arrays</b>: at minimum an ant <code>positions</code> array <code>(n, 2)</code>, an <code>ids</code> array, and an <code>alive</code> mask — plus the nest position and food positions. No per-ant Python objects in the hot state.</li>
+    <li>A <b>constructor / factory</b> <code>make_world(config, rng)</code> that takes an <b>injected</b> <code>np.random.Generator</code> and places nest, food, and ants using <i>only</i> that generator — no global <code>random</code>/<code>np.random</code>.</li>
+    <li><b>Stable identity</b>: each ant gets a unique id from a <b>monotonic counter</b> (id is <i>not</i> the row index), and there's a way to resolve <code>id → row</code>.</li>
+    <li>All placement respects bounds and the <b>occupancy cap</b> at construction: every entity is inside the grid, and no cell holds more than <code>occupancy_cap</code> ants.</li>
+    <li><b>Determinism test</b> (<code>pytest</code>): two worlds built from the same seed are element-wise identical (positions + ids); two different seeds differ.</li>
+    <li><b>Invariant test</b> (<code>hypothesis</code>, over randomized valid configs): ant ids are unique; all positions are in-bounds; no cell exceeds the cap; counts match the config. Let Hypothesis pick <code>width</code>/<code>height</code>/<code>n_ants</code>/<code>n_food</code>/<code>cap</code> within ranges that are actually satisfiable.</li>
+    <li>The world stays <b>headless</b>: no import of any renderer, no drawing. It's plain data an eventual <code>StateSnapshot</code> can read.</li>
+    <li>Green gates: <code>uv run ruff check .</code>, <code>uv run ty check .</code>, and <code>uv run pytest</code> all pass.</li>
+  </ul>
+  <div class="card why">
+    <b>Then come back to the chat.</b> Tell me you're done, or paste <code>world.py</code> + the tests + the config change. I'll review the layout choice, the id/row separation, and the seeding — and specifically stress the invariants (what happens when <code>n_ants</code> can't fit under the cap? does your placement loop terminate?) — before we open <b>Lesson 1.2 (Movement &amp; occupancy)</b>, where these arrays finally start to move.
+  </div>
+  <p class="muted"><b>Edge to think about (not required, but I'll ask):</b> what should <code>make_world</code> do when <code>n_ants &gt; width·height·occupancy_cap</code> — i.e. the ants physically can't fit? A silent infinite rejection loop is the trap. A validated config or an explicit error is the deep-module answer.</p>
+
+  <h2>7 · Deep-dive references</h2>
+  <div class="card ref"><span class="dom">Python / NumPy</span><br><a href="https://hdembinski.github.io/posts/struct_of_arrays_vs_arrays_of_structs.html">Dembinski — Array of structs vs struct of arrays (NumPy/Numba benchmark)</a><br><span class="muted">The concrete measurement behind §2 — same particle-sim shape as ours, up to ~40× from SoA. Read this if the layout choice feels like premature optimization; it isn't.</span></div>
+  <div class="card ref"><span class="dom">Python / NumPy</span><br><a href="https://numpy.org/doc/stable/user/basics.rec.html">NumPy — Structured arrays</a> · <a href="https://arxiv.org/pdf/1102.1523">The NumPy array: a structure for efficient numerical computation</a><br><span class="muted">What structured/record arrays are — and, per §2's warning, why they re-introduce the AoS layout you're avoiding. The paper explains <i>why</i> contiguous typed arrays vectorize.</span></div>
+  <div class="card ref"><span class="dom">Simulation architecture</span><br><a href="http://bitsquid.blogspot.com/2014/08/building-data-oriented-entity-system.html">Frykholm — Building a Data-Oriented Entity System</a> · <a href="https://en.wikipedia.org/wiki/Entity_component_system">ECS overview</a><br><span class="muted">The entity-handle / id-vs-index pattern behind §3. You're building a tiny domain-specific version of this; the generational-index refinement is optional future reading.</span></div>
+  <div class="card ref"><span class="dom">Ant biology</span><br><a href="https://www.hup.harvard.edu/books/9780674485266">Hölldobler &amp; Wilson — <i>Journey to the Ants</i></a><br><span class="muted">On colony founding: a real nest starts from a queen and a location, and the physical arena shapes everything. Grounds why "nest position + a grid" is the right primitive to seed the world around — not an incidental detail.</span></div>
+
+  <footer>
+    AntWorks-RL · Lesson 1.1 · saved to <code>learning/explainers/</code> — reopen anytime.<br>
+    Terminology follows <code>learning/GLOSSARY.md</code>. Next: <b>Phase 1 · 1.2 — Movement &amp; occupancy</b> (the arrays start to move).
+  </footer>
+</div>
+
+<script>
+  document.querySelectorAll('.quiz').forEach(function(quiz){
+    var correct = quiz.getAttribute('data-correct');
+    quiz.querySelectorAll('.opt').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var k = btn.getAttribute('data-k');
+        quiz.querySelectorAll('.opt').forEach(function(b){ b.classList.remove('correct','wrong'); });
+        quiz.querySelectorAll('.fb').forEach(function(f){ f.classList.remove('show'); });
+        btn.classList.add(k===correct ? 'correct' : 'wrong');
+        if(k!==correct){ quiz.querySelector('.opt[data-k="'+correct+'"]').classList.add('correct'); }
+        var fb = quiz.querySelector('.fb[data-k="'+k+'"]'); if(fb) fb.classList.add('show');
+      });
+    });
+  });
+  document.querySelectorAll('.checklist').forEach(function(list, li){
+    list.querySelectorAll('li').forEach(function(item, i){
+      var key = 'awrl-check:' + location.pathname + ':' + li + ':' + i;
+      if(localStorage.getItem(key) === '1'){ item.classList.add('checked'); }
+      item.addEventListener('click', function(){
+        item.classList.toggle('checked');
+        localStorage.setItem(key, item.classList.contains('checked') ? '1' : '0');
+      });
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 1.1a — Python dataclasses</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --ink:#e8e9ec; --muted:#9aa1ad;
+    --line:#2a2f3a; --accent:#e8a33d; --accent2:#6cc17a; --bad:#e06c75; --code:#0b0d11;
+    --radius:14px;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f6f6f4; --panel:#fff; --panel2:#f0f1ee; --ink:#1c1e24; --muted:#5c636f;
+      --line:#e2e3df; --accent:#c9821f; --accent2:#3f9e57; --code:#f2f3ef; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:820px;margin:0 auto;padding:48px 22px 96px;}
+  .kicker{color:var(--accent);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:12.5px}
+  h1{font-size:34px;line-height:1.15;margin:.35em 0 .1em;letter-spacing:-.02em}
+  h2{font-size:23px;margin:2.1em 0 .5em;letter-spacing:-.01em;border-bottom:1px solid var(--line);padding-bottom:.35em}
+  h3{font-size:17px;margin:1.5em 0 .3em}
+  p{color:var(--ink)} .muted{color:var(--muted)}
+  .lead{font-size:18px;color:var(--muted)}
+  a{color:var(--accent)}
+  code{background:var(--code);padding:.12em .4em;border-radius:6px;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;font-size:.88em}
+  pre{background:var(--code);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;overflow-x:auto}
+  pre code{background:none;padding:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:18px 0}
+  .why{border-left:3px solid var(--accent)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:620px){.grid{grid-template-columns:1fr}}
+  .tool{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .tool b{color:var(--accent)}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:14.5px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--accent);font-size:12.5px;letter-spacing:.04em;text-transform:uppercase}
+  td code{font-size:.85em}
+  .tag{display:inline-block;background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+    border-radius:999px;padding:2px 10px;font-size:12px;margin:2px 4px 2px 0}
+  /* quiz */
+  .quiz{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin:16px 0}
+  .q{font-weight:600;margin-bottom:10px}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin:7px 0;cursor:pointer;
+    font:inherit;transition:.12s}
+  .opt:hover{border-color:var(--accent)}
+  .opt.correct{border-color:var(--accent2);background:color-mix(in srgb,var(--accent2) 16%,var(--panel2))}
+  .opt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,var(--panel2))}
+  .fb{margin-top:10px;font-size:14.5px;color:var(--muted);display:none}
+  .fb.show{display:block}
+  .checklist{list-style:none;padding:0}
+  .checklist li{padding:8px 0 8px 30px;position:relative;border-bottom:1px solid var(--line);cursor:pointer;user-select:none;transition:color .15s}
+  .checklist li:before{content:"▢";position:absolute;left:4px;color:var(--accent);font-size:15px}
+  .checklist li:hover{color:var(--accent)}
+  .checklist li.checked:before{content:"▣";color:var(--accent2)}
+  .checklist li.checked{color:var(--muted)}
+  .pill{font-size:12px;color:var(--bg);background:var(--accent);border-radius:999px;padding:2px 10px;font-weight:700}
+  footer{margin-top:40px;color:var(--muted);font-size:14px}
+  .ref{border-left:3px solid var(--accent2);background:var(--panel);border-radius:0 12px 12px 0}
+  .dom{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2);font-weight:700}
+  .warn{border-left:3px solid var(--bad)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">AntWorks-RL · Phase 1 · Lesson 1.1a · companion</div>
+  <h1>Python dataclasses</h1>
+  <p class="lead">A side-quest, but a well-timed one. <a href="lesson-1.1-grid-and-entities.html">Lesson 1.1</a> tells you "a plain dataclass holding NumPy arrays is fine" for the world — so before you write <code>World</code>, this lesson makes that choice deliberate. You already reach for <code>pydantic.BaseModel</code> for config (<a href="lesson-0.3-config-spine.html">0.3</a>). The skill here is knowing <b>which of the two to reach for, when</b>, plus the four decorator switches — <code>slots</code>, <code>frozen</code>, <code>field</code>, <code>__post_init__</code> — that separate a toy dataclass from a production one. And one NumPy trap that will bite your 1.1 determinism test if you don't see it coming.</p>
+
+  <div class="card why">
+    <b>Why this now?</b> Your world state is the hottest data in the project — every step of 1.2–1.4 reads and writes it, and the MISSION is thousands of agents. A dataclass is the right container for it precisely because it is a <i>zero-overhead</i> record: no validation, no coercion, just <code>__init__</code>/<code>__repr__</code>/<code>__eq__</code> generated for you. But "zero-overhead" cuts both ways — the defaults (mutable-default guard, auto <code>__eq__</code>, no slots) have sharp edges that matter more at scale, not less. Get the switches right once here and every entity/snapshot dataclass downstream inherits the decision.
+  </div>
+
+  <h2>1 · What <code>@dataclass</code> actually generates</h2>
+  <p>A dataclass is not a new kind of object — it's a code generator. You declare fields as annotated class attributes; the decorator writes the boilerplate dunder methods from those annotations at class-creation time. Nothing runs at runtime that a hand-written class wouldn't.</p>
+<pre><code>from dataclasses import dataclass
+
+@dataclass
+class Nest:
+    x: int
+    y: int
+    capacity: int = 100      # field with a default
+
+# generated for you: __init__, __repr__, __eq__
+Nest(3, 4) == Nest(3, 4)     # True  — value equality, not identity</code></pre>
+  <p>Three things to internalise, because they're the whole value proposition:</p>
+  <ul>
+    <li>The annotation is what makes a field. <code>x: int</code> is a field; <code>x = 5</code> (no annotation) is <i>not</i> — it stays a plain class attribute the decorator ignores. The type is <b>not enforced</b> at runtime; <code>ty</code> checks it statically, that's all.</li>
+    <li>Order of declaration = order of <code>__init__</code> positional args. A field with a default cannot precede one without (same rule as function args).</li>
+    <li><code>__eq__</code> compares <code>(self.field1, self.field2, …)</code> as a tuple. <b>Remember this</b> — §5 shows how it detonates on NumPy arrays.</li>
+  </ul>
+
+  <h2>2 · The decision: dataclass or Pydantic?</h2>
+  <p>You now have both in the codebase. They look similar and solve <i>opposite</i> problems. The rule of thumb:</p>
+  <div class="grid">
+    <div class="tool"><b>Pydantic <code>BaseModel</code> → boundaries</b><br><span class="muted">Data crossing <i>into</i> your program from an untrusted place — YAML config, a request, a file. It <b>validates and coerces</b> (<code>"4"</code>→<code>4</code>), raises on bad input, and costs real cycles per construction. That's exactly what you want for <code>Config</code>: fail loud at load time. It's a gate.</span></div>
+    <div class="tool"><b><code>@dataclass</code> → internal state</b><br><span class="muted">Data you already trust, built and mutated in your own hot loop — the <code>World</code>, an entity record, a <code>StateSnapshot</code>. No validation, no coercion, no per-instance overhead beyond a normal object. It's a <i>struct</i>, not a gate.</span></div>
+  </div>
+  <p>Concretely for AntWorks: <code>Config</code> stays <code>BaseModel</code> (it parses config you might fat-finger). <code>World</code> should be a <code>@dataclass</code> — validating a million-element array on every construction, then again after every step, would tax the exact hot path 1.1 built the SoA layout to protect. Validate <b>once</b> at the config boundary; trust the arrays thereafter.</p>
+  <div class="card warn">
+    <b>The trap in between:</b> Pydantic <i>also</i> ships a <code>@pydantic.dataclasses.dataclass</code>, and stdlib dataclasses can be nested inside a <code>BaseModel</code>. Don't blur them by reflex. If you find yourself wanting Pydantic's validation on your world state, that's a signal the untrusted data should have been validated <i>earlier</i>, at the config edge — not that the hot struct needs a gate bolted on.
+  </div>
+
+  <h2>3 · The four switches that make it production-grade</h2>
+
+  <h3><code>field(default_factory=…)</code> — the mutable-default rule</h3>
+  <p>A dataclass field can't default to a mutable object. This is illegal and raises at class-definition time:</p>
+<pre><code>@dataclass
+class World:
+    food: list = []          # ValueError: mutable default not allowed</code></pre>
+  <p>Because a bare default is shared across <i>all</i> instances — the classic Python footgun — dataclasses refuse it and make you say "call this factory per instance" instead:</p>
+<pre><code>from dataclasses import dataclass, field
+import numpy as np
+
+@dataclass
+class World:
+    positions: np.ndarray = field(default_factory=lambda: np.zeros((0, 2), np.int32))
+    food: list[tuple[int,int]] = field(default_factory=list)</code></pre>
+  <p><code>field()</code> is also where you tune per-field behaviour: <code>compare=False</code> (exclude from <code>__eq__</code>), <code>repr=False</code> (hide from printout — good for a big array), <code>kw_only=True</code>, and <code>metadata=</code>.</p>
+
+  <h3><code>slots=True</code> — smaller, faster instances (3.10+)</h3>
+  <p>By default every instance carries a <code>__dict__</code>. <code>@dataclass(slots=True)</code> generates <code>__slots__</code> instead: less memory per instance and faster attribute access, at the cost of "no ad-hoc new attributes." For a <i>single</i> <code>World</code> holding arrays this barely matters — but it's the reason 1.1 told you <b>not</b> to make a dataclass <i>per ant</i>. A slotted per-ant object is still an object per ant; the SoA arrays win regardless. Reach for <code>slots=True</code> on any small record you might hold many of.</p>
+
+  <h3><code>frozen=True</code> — immutability for snapshots</h3>
+  <p>A frozen dataclass blocks attribute assignment after construction (<code>__setattr__</code> raises) and, as a bonus, becomes hashable. This is the right default for <code>StateSnapshot</code> in <a href="lesson-1.6-snapshot.html">1.6</a>: a renderer should never mutate the frame it was handed.</p>
+  <div class="card warn">
+    <b><code>frozen</code> is shallow.</b> It freezes the <i>binding</i>, not the object. A frozen dataclass holding a NumPy array still lets you do <code>snapshot.positions[0] = 99</code> — the array is mutable, only the <i>name</i> <code>positions</code> is locked. If a snapshot must be truly read-only, set <code>arr.flags.writeable = False</code> on the arrays too. Frozen ≠ deep-frozen.
+  </div>
+
+  <h3><code>__post_init__</code> — derived fields &amp; the frozen escape hatch</h3>
+  <p><code>__init__</code> is generated, so your hook for "compute something after the fields are set" is <code>__post_init__</code>. Use it for a derived index or a cheap invariant assert:</p>
+<pre><code>@dataclass
+class World:
+    ids: np.ndarray
+    positions: np.ndarray
+    _id_to_row: dict[int,int] = field(init=False, repr=False)  # not a constructor arg
+
+    def __post_init__(self):
+        self._id_to_row = {int(i): r for r, i in enumerate(self.ids)}
+</code></pre>
+  <p>On a <b>frozen</b> instance even <code>__post_init__</code> can't assign normally — you must go around your own lock with <code>object.__setattr__(self, "field", value)</code>. Needing that a lot is a hint the field should be a real constructor arg instead.</p>
+
+  <h2>4 · A couple more you'll want</h2>
+  <table>
+    <tr><th>Switch</th><th>What it does / when</th></tr>
+    <tr><td><code>kw_only=True</code></td><td>All fields become keyword-only in <code>__init__</code> (3.10+). Frees you from the "defaults must come last" ordering rule and makes call sites self-documenting — nice for a <code>World</code> with many params.</td></tr>
+    <tr><td><code>order=True</code></td><td>Generates <code>__lt__</code> etc. from the field tuple. You rarely want it on world state; handy for small sortable records.</td></tr>
+    <tr><td><code>dataclasses.replace(obj, x=…)</code></td><td>Returns a copy with some fields changed — the idiomatic way to "mutate" a <code>frozen</code> snapshot: build the next one.</td></tr>
+    <tr><td><code>asdict()</code> / <code>astuple()</code></td><td>Recursively convert to plain dict/tuple. Convenient — but it <b>deep-copies</b>, so don't call it on your million-element arrays every frame.</td></tr>
+  </table>
+
+  <h2>5 · The trap that will hit your 1.1 test</h2>
+  <p>Your 1.1 determinism test asserts "two worlds from the same seed are identical." If <code>World</code> is a plain dataclass with NumPy-array fields, the obvious assertion <b>raises</b> — it doesn't just return False:</p>
+<pre><code>world_a == world_b
+# ValueError: The truth value of an array with more than one element is ambiguous.</code></pre>
+  <p>Why: the generated <code>__eq__</code> compares field tuples. Tuple comparison evaluates <code>positions_a == positions_b</code>, but for NumPy that returns an <i>array</i> of bools, and Python then tries <code>bool(that array)</code> — which NumPy refuses. Auto-<code>__eq__</code> silently assumes its fields return a real bool from <code>==</code>. Arrays don't. Three ways out, in order of preference:</p>
+  <ul>
+    <li>Mark array fields <code>field(compare=False)</code> and assert equality explicitly in the test with <code>np.array_equal(a.positions, b.positions)</code> — clearest about intent.</li>
+    <li>Write a custom <code>__eq__</code> (drop the generated one with <code>@dataclass(eq=False)</code>) that uses <code>np.array_equal</code> per array.</li>
+    <li>Compare the plain scalar fields via the dataclass and the arrays separately in the test.</li>
+  </ul>
+  <p class="muted">This is the deep-module lesson in miniature: the decorator's convenience holds until a field's <code>==</code> doesn't return a bool — then you must take the wheel. Knowing <i>where</i> the generated code stops being right is the whole skill.</p>
+
+  <h2>6 · Check yourself</h2>
+  <p class="muted">Immediate feedback — click an answer.</p>
+
+  <div class="quiz" data-correct="b">
+    <div class="q">Q1. The <code>Config</code> loaded from YAML stays a Pydantic <code>BaseModel</code>, but <code>World</code> should be a <code>@dataclass</code>. What's the core reason?</div>
+    <button class="opt" data-k="a">a) Pydantic can't hold NumPy arrays, so world state has to be a dataclass.</button>
+    <button class="opt" data-k="b">b) Pydantic validates and coerces every construction — right for untrusted config at the boundary, wasteful for trusted hot-loop state you build and mutate every step.</button>
+    <button class="opt" data-k="c">c) Dataclasses are always faster than Pydantic for every purpose, so config should really be a dataclass too.</button>
+    <div class="fb" data-k="a">It can, actually (with config). Storage isn't the issue — where validation belongs is.</div>
+    <div class="fb" data-k="b">Exactly — validate once at the config edge, trust the arrays thereafter. Pydantic is a gate; a dataclass is a struct.</div>
+    <div class="fb" data-k="c">No — Pydantic's validation cost is a feature at the boundary. You want that gate on config; you just don't want it on per-step world state.</div>
+  </div>
+
+  <div class="quiz" data-correct="c">
+    <div class="q">Q2. <code>@dataclass class World: food: list = []</code> — what happens?</div>
+    <button class="opt" data-k="a">a) Every World shares one list, the usual mutable-default bug, but it runs fine.</button>
+    <button class="opt" data-k="b">b) It works and each instance quietly gets its own fresh empty list.</button>
+    <button class="opt" data-k="c">c) It raises a ValueError at class-definition time; you must use <code>field(default_factory=list)</code>.</button>
+    <div class="fb" data-k="a">That's the bug dataclasses <i>prevent</i> — they refuse the mutable default rather than share it.</div>
+    <div class="fb" data-k="b">That's what <code>default_factory</code> gives you, but a bare <code>[]</code> doesn't reach that behaviour — it's rejected first.</div>
+    <div class="fb" data-k="c">Right — the decorator guards the shared-mutable footgun by refusing the default outright.</div>
+  </div>
+
+  <div class="quiz" data-correct="a">
+    <div class="q">Q3. You make <code>StateSnapshot</code> a <code>frozen=True</code> dataclass holding a <code>positions</code> array. Is the snapshot truly read-only?</div>
+    <button class="opt" data-k="a">a) No — frozen locks the field binding, but <code>snapshot.positions[0] = 9</code> still mutates the array; freeze the array too if you need that.</button>
+    <button class="opt" data-k="b">b) Yes — frozen deep-freezes everything the dataclass transitively holds, arrays included.</button>
+    <button class="opt" data-k="c">c) No — frozen dataclasses can't hold NumPy arrays at all, so it wouldn't construct.</button>
+    <div class="fb" data-k="a">Correct — frozen is shallow. It stops rebinding the name; the referenced array stays mutable unless you set <code>flags.writeable = False</code>.</div>
+    <div class="fb" data-k="b">No — frozen is shallow. It freezes the binding, not the referenced object.</div>
+    <div class="fb" data-k="c">It constructs fine; the array is a perfectly valid field value. The issue is that it stays mutable.</div>
+  </div>
+
+  <h2>7 · Micro-exercise <span class="pill">5 minutes</span></h2>
+  <p>No new deliverable — this is a warm-up you fold straight into your 1.1 <code>World</code>. In a scratch file or the REPL:</p>
+  <ul class="checklist">
+    <li>Write a <code>@dataclass</code> <code>World</code> with <code>ids</code> and <code>positions</code> NumPy-array fields plus an <code>occupancy_cap: int</code>, using <code>field(default_factory=…)</code> for the arrays.</li>
+    <li>Construct two identical worlds and run <code>world_a == world_b</code>. Watch it raise the "ambiguous truth value" <code>ValueError</code> — feel the trap from §5 first-hand.</li>
+    <li>Fix it: mark the array fields <code>compare=False</code>, and assert equality with <code>np.array_equal</code>. Confirm <code>==</code> now returns a real bool.</li>
+    <li>Add a <code>__post_init__</code> that builds an <code>_id_to_row</code> dict (an <code>init=False</code> field). Verify it lands after construction.</li>
+    <li>Flip to <code>@dataclass(frozen=True, slots=True)</code>. Confirm <code>world.occupancy_cap = 9</code> now raises — then confirm <code>world.positions[0] = 99</code> still succeeds (shallow freeze, §3).</li>
+  </ul>
+  <div class="card why">
+    <b>Then carry it into 1.1.</b> You don't need to report back on this one separately — bring it into your <code>world.py</code>. When you paste 1.1 for review I'll be checking exactly these: is <code>World</code> a dataclass (not Pydantic)? do the array fields dodge the <code>__eq__</code> trap? is the id→row map derived in <code>__post_init__</code> rather than passed in? Get these right and the determinism/invariant tests in 1.1 fall out cleanly.
+  </div>
+
+  <h2>8 · Deep-dive references</h2>
+  <div class="card ref"><span class="dom">Primary source · Python docs</span><br><a href="https://docs.python.org/3/library/dataclasses.html"><code>dataclasses</code> — the standard library reference</a><br><span class="muted">The canonical page. Read the <code>field()</code> parameters and the <code>@dataclass</code> switch list (<code>slots</code>, <code>frozen</code>, <code>kw_only</code>, <code>eq</code>, <code>order</code>) — every switch in this lesson is documented there with its exact semantics.</span></div>
+  <div class="card ref"><span class="dom">Rationale · PEP</span><br><a href="https://peps.python.org/pep-0557/">PEP 557 — Data Classes</a><br><span class="muted">Why the feature exists and what it deliberately is <i>not</i> (notably: no validation — that's your cue for when to reach for Pydantic instead). The "Rejected ideas" section is the interesting part.</span></div>
+  <div class="card ref"><span class="dom">Comparison · Pydantic</span><br><a href="https://docs.pydantic.dev/latest/concepts/dataclasses/">Pydantic — dataclasses &amp; when to use which</a><br><span class="muted">Backs §2: how Pydantic frames validation-at-the-boundary vs a plain struct, and the <code>@pydantic.dataclasses.dataclass</code> middle ground to <i>not</i> reach for reflexively.</span></div>
+  <div class="card ref"><span class="dom">Depth · library design</span><br><a href="https://www.attrs.org/en/stable/why.html">attrs — "Why not…"</a><br><span class="muted">stdlib dataclasses were distilled from <code>attrs</code>. This page maps the design space (slots, validators, converters) beyond what stdlib ships — useful for judging when you've outgrown a dataclass.</span></div>
+
+  <div class="card">
+    <b>Ask me anything.</b> I'm your teacher here — if the <code>__eq__</code>/NumPy interaction, the frozen-is-shallow point, or the dataclass-vs-Pydantic line is fuzzy, ask in the chat before you write <code>world.py</code>. Cheaper to clear up now than in review.
+  </div>
+
+  <footer>
+    AntWorks-RL · Lesson 1.1a (companion to <a href="lesson-1.1-grid-and-entities.html">1.1</a>) · saved to <code>learning/explainers/</code> — reopen anytime.<br>
+    Terminology follows <code>learning/GLOSSARY.md</code>. Back to the main track: finish <b>1.1 — Grid &amp; entities</b>, then <b>1.2 — Movement &amp; occupancy</b>.
+  </footer>
+</div>
+
+<script>
+  document.querySelectorAll('.quiz').forEach(function(quiz){
+    var correct = quiz.getAttribute('data-correct');
+    quiz.querySelectorAll('.opt').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var k = btn.getAttribute('data-k');
+        quiz.querySelectorAll('.opt').forEach(function(b){ b.classList.remove('correct','wrong'); });
+        quiz.querySelectorAll('.fb').forEach(function(f){ f.classList.remove('show'); });
+        btn.classList.add(k===correct ? 'correct' : 'wrong');
+        if(k!==correct){ quiz.querySelector('.opt[data-k="'+correct+'"]').classList.add('correct'); }
+        var fb = quiz.querySelector('.fb[data-k="'+k+'"]'); if(fb) fb.classList.add('show');
+      });
+    });
+  });
+  document.querySelectorAll('.checklist').forEach(function(list, li){
+    list.querySelectorAll('li').forEach(function(item, i){
+      var key = 'awrl-check:' + location.pathname + ':' + li + ':' + i;
+      if(localStorage.getItem(key) === '1'){ item.classList.add('checked'); }
+      item.addEventListener('click', function(){
+        item.classList.toggle('checked');
+        localStorage.setItem(key, item.classList.contains('checked') ? '1' : '0');
+      });
+    });
+  });
+</script>
+</body>
+</html>
